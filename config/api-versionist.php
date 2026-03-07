@@ -144,13 +144,13 @@ return [
     | provider at boot time.
     |
     | Example:
-    |   App\ApiTransformers\V2Transformer::class,
-    |   App\ApiTransformers\V3Transformer::class,
+    |   App\Api\Transformers\V2Transformer::class,
+    |   App\Api\Transformers\V3Transformer::class,
     |
     */
 
     'transformers' => [
-        // App\ApiTransformers\V2Transformer::class,
+        // App\Api\Transformers\V2Transformer::class,
     ],
 
     /*
