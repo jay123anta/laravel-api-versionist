@@ -4,7 +4,7 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/versionist/laravel-api-versionist)](https://packagist.org/packages/versionist/laravel-api-versionist)
 [![PHP Version](https://img.shields.io/packagist/php-v/versionist/laravel-api-versionist)](https://packagist.org/packages/versionist/laravel-api-versionist)
-[![Tests](https://img.shields.io/badge/tests-110%20passed-brightgreen)](https://github.com/jay123anta/laravel-api-versionist)
+[![Tests](https://github.com/jay123anta/laravel-api-versionist/actions/workflows/tests.yml/badge.svg)](https://github.com/jay123anta/laravel-api-versionist/actions/workflows/tests.yml)
 [![License](https://img.shields.io/packagist/l/versionist/laravel-api-versionist)](https://packagist.org/packages/versionist/laravel-api-versionist)
 [![Total Downloads](https://img.shields.io/packagist/dt/versionist/laravel-api-versionist)](https://packagist.org/packages/versionist/laravel-api-versionist)
 
