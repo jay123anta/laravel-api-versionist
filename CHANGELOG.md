@@ -57,4 +57,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `request_data_key` config for enveloped request payloads
   - Non-data keys (meta, links, pagination) pass through untouched
 
-[1.0.0]: https://github.com/versionist/laravel-api-versionist/releases/tag/v1.0.0
+[1.0.0]: https://github.com/jayanta/laravel-api-versionist/releases/tag/v1.0.0

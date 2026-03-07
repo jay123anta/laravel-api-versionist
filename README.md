@@ -2,11 +2,11 @@
 
 **Your API changes. Your controllers don't.**
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/versionist/laravel-api-versionist)](https://packagist.org/packages/versionist/laravel-api-versionist)
-[![PHP Version](https://img.shields.io/packagist/php-v/versionist/laravel-api-versionist)](https://packagist.org/packages/versionist/laravel-api-versionist)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
+[![PHP Version](https://img.shields.io/packagist/php-v/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
 [![Tests](https://github.com/jay123anta/laravel-api-versionist/actions/workflows/tests.yml/badge.svg)](https://github.com/jay123anta/laravel-api-versionist/actions/workflows/tests.yml)
-[![License](https://img.shields.io/packagist/l/versionist/laravel-api-versionist)](https://packagist.org/packages/versionist/laravel-api-versionist)
-[![Total Downloads](https://img.shields.io/packagist/dt/versionist/laravel-api-versionist)](https://packagist.org/packages/versionist/laravel-api-versionist)
+[![License](https://img.shields.io/packagist/l/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
+[![Total Downloads](https://img.shields.io/packagist/dt/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
 
 Laravel API Versionist handles the messy work of supporting multiple API versions. You write small transformer classes that describe what changed between versions, and the package automatically converts requests and responses on every API call — so your controllers only ever speak the latest version.
 
@@ -163,7 +163,7 @@ Your controller always works with the latest version. It never knows (or cares) 
 ## Installation
 
 ```bash
-composer require versionist/laravel-api-versionist
+composer require jayanta/laravel-api-versionist
 ```
 
 Publish the configuration file:
@@ -1201,6 +1201,12 @@ Yes. If a v1 client calls your v3 API, the package runs V2Transformer then V3Tra
 **Q: What happens to fields I don't mention in the transformer?**
 
 They pass through unchanged. If your v2 adds a `full_name` field but the request also has `age`, `city`, and `custom_field`, those fields come through untouched. Transformers only modify the fields they explicitly touch.
+
+---
+
+## Credits
+
+- [Jay Anta](https://github.com/jay123anta)
 
 ---
 

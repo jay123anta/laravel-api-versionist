@@ -21,7 +21,7 @@ use Versionist\ApiVersionist\ApiVersionTransformer;
  *                        BACK to the previous version's expected schema.
  * - These two methods should be inverse operations of each other.
  *
- * @see https://github.com/versionist/laravel-api-versionist
+ * @see https://github.com/jayanta/laravel-api-versionist
  */
 final class {{ class }} extends ApiVersionTransformer
 {
