@@ -1,5 +1,5 @@
 {
-    "name": "versionist/laravel-api-versionist",
+    "name": "jayanta/laravel-api-versionist",
     "description": "Elegant API versioning for Laravel — transform requests and responses across versions automatically.",
     "keywords": ["laravel", "api", "versioning", "transformer", "rest"],
     "license": "MIT",
