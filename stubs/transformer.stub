@@ -1,0 +1,91 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Versionist\ApiVersionist\ApiVersionTransformer;
+
+/**
+ * API Version Transformer for {{ version }}.
+ *
+ * This transformer defines how to upgrade requests from the previous
+ * version to {{ version }}, and how to downgrade responses from {{ version }}
+ * back to the previous version.
+ *
+ * ## Guidelines
+ *
+ * - upgradeRequest():    Transform incoming request data FROM the previous
+ *                        version TO this version's expected schema.
+ * - downgradeResponse(): Transform outgoing response data FROM this version
+ *                        BACK to the previous version's expected schema.
+ * - These two methods should be inverse operations of each other.
+ *
+ * @see https://github.com/versionist/laravel-api-versionist
+ */
+final class {{ class }} extends ApiVersionTransformer
+{
+    /**
+     * The API version this transformer handles.
+     *
+     * @return string
+     */
+    public function version(): string
+    {
+        return '{{ version }}';
+    }
+
+    /**
+     * A human-readable description of the changes in this version.
+     *
+     * @return string
+     */
+    public function description(): string
+    {
+        return 'Describe what changed in {{ version }}.';
+    }
+
+    /**
+     * The release date of this API version (ISO-8601 format).
+     *
+     * @return string|null
+     */
+    public function releasedAt(): ?string
+    {
+        return '{{ date }}';
+    }
+
+    /**
+     * Upgrade a request payload from the previous version to {{ version }}.
+     *
+     * @param  array<string, mixed>  $data  The request payload from the previous version.
+     * @return array<string, mixed>         The upgraded payload for {{ version }}.
+     */
+    public function upgradeRequest(array $data): array
+    {
+        // Example: Rename a field
+        // if (isset($data['old_field'])) {
+        //     $data['new_field'] = $data['old_field'];
+        //     unset($data['old_field']);
+        // }
+
+        return $data;
+    }
+
+    /**
+     * Downgrade a response payload from {{ version }} to the previous version.
+     *
+     * @param  array<string, mixed>  $data  The response payload from {{ version }}.
+     * @return array<string, mixed>         The downgraded payload for the previous version.
+     */
+    public function downgradeResponse(array $data): array
+    {
+        // Example: Reverse the field rename
+        // if (isset($data['new_field'])) {
+        //     $data['old_field'] = $data['new_field'];
+        //     unset($data['new_field']);
+        // }
+
+        return $data;
+    }
+}
