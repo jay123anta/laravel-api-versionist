@@ -6,8 +6,9 @@
     "type": "library",
     "authors": [
         {
-            "name": "Versionist",
-            "email": "dev@versionist.io"
+            "name": "Jay Anta",
+            "email": "jay123anta@gmail.com",
+            "homepage": "https://github.com/jay123anta"
         }
     ],
     "require": {
