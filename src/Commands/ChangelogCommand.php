@@ -8,63 +8,19 @@ use Illuminate\Console\Command;
 use Versionist\ApiVersionist\Manager\ApiVersionistManager;
 use Versionist\ApiVersionist\Version\VersionNegotiator;
 
-/**
- * Display a changelog of all registered API versions.
- *
- * Supports three output formats: a colored ASCII table (default),
- * structured JSON, and Keep-a-Changelog-style Markdown.
- *
- * ## Sample terminal output (table format)
- *
- * ```
- * ┌──────────────────────────────────────────────────┐
- * │          API Version Changelog                   │
- * ├──────────────────────────────────────────────────┤
- * │                                                  │
- * │  v1 (baseline)                                   │
- * │  The original API version before any transforms. │
- * │                                                  │
- * │  v2  [Active]  Released: 2024-03-15              │
- * │  Renamed name to full_name.                      │
- * │                                                  │
- * │  v3  [LATEST]  Released: 2024-09-01              │
- * │  Nested email into contact.email.                │
- * │                                                  │
- * ├──────────────────────────────────────────────────┤
- * │  3 versions registered (baseline: v1)            │
- * └──────────────────────────────────────────────────┘
- * ```
- */
+/** Display a changelog of all registered API versions. */
 class ChangelogCommand extends Command
 {
-    /**
-     * The console command signature.
-     *
-     * @var string
-     */
     protected $signature = 'api:changelog
         {--format=table : Output format: table, json, or markdown}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Display a changelog of all registered API versions';
 
-    /**
-     * Execute the console command.
-     *
-     * @param  ApiVersionistManager  $manager     The versioning manager.
-     * @param  VersionNegotiator     $negotiator  The version negotiator (for deprecation info).
-     * @return int                                Exit code.
-     */
     public function handle(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
     {
         $registry = $manager->getRegistry();
         $config   = $manager->getConfig();
 
-        // ── Handle empty registry ──
         if ($registry->all() === []) {
             $this->warn('No transformers registered.');
             $this->line('');
@@ -87,13 +43,6 @@ class ChangelogCommand extends Command
         };
     }
 
-    /**
-     * Render the changelog as a colored ASCII table.
-     *
-     * @param  ApiVersionistManager  $manager
-     * @param  VersionNegotiator     $negotiator
-     * @return int
-     */
     private function outputTable(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
     {
         $registry = $manager->getRegistry();
@@ -110,7 +59,6 @@ class ChangelogCommand extends Command
 
         foreach ($versions as $version) {
             if ($version === $baseline) {
-                // Baseline version — no transformer exists.
                 $this->line("  <fg=white;options=bold>{$version}</> <fg=gray>(baseline)</>  ");
                 $this->line('  <fg=gray>The original API version before any transforms.</>');
                 $this->line('');
@@ -119,7 +67,6 @@ class ChangelogCommand extends Command
 
             $transformer = $registry->getTransformer($version);
 
-            // ── Build the status badge ──
             $badge = '';
             if ($version === $latest) {
                 $badge = '  <fg=green;options=bold>[LATEST]</>';
@@ -131,7 +78,6 @@ class ChangelogCommand extends Command
                 $badge = '  <fg=white>[Active]</>';
             }
 
-            // ── Build the released date ──
             $releasedAt = $transformer->releasedAt();
             $dateBadge  = $releasedAt !== null
                 ? "  <fg=gray>Released: {$releasedAt}</>"
@@ -150,13 +96,6 @@ class ChangelogCommand extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * Render the changelog as structured JSON.
-     *
-     * @param  ApiVersionistManager  $manager
-     * @param  VersionNegotiator     $negotiator
-     * @return int
-     */
     private function outputJson(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
     {
         $registry = $manager->getRegistry();
@@ -200,13 +139,6 @@ class ChangelogCommand extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * Render the changelog as Keep-a-Changelog-style Markdown.
-     *
-     * @param  ApiVersionistManager  $manager
-     * @param  VersionNegotiator     $negotiator
-     * @return int
-     */
     private function outputMarkdown(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
     {
         $registry = $manager->getRegistry();
@@ -217,7 +149,6 @@ class ChangelogCommand extends Command
         $this->line('# API Changelog');
         $this->line('');
 
-        // Iterate in reverse (newest first) for changelog convention.
         $versions = array_reverse($registry->getVersions());
 
         foreach ($versions as $version) {
@@ -232,10 +163,8 @@ class ChangelogCommand extends Command
             $transformer = $registry->getTransformer($version);
             $releasedAt  = $transformer->releasedAt() ?? 'Unreleased';
 
-            // Build header with date.
             $header = "## {$version} — {$releasedAt}";
 
-            // Add badges.
             $badges = [];
             if ($version === $latest) {
                 $badges[] = '`LATEST`';

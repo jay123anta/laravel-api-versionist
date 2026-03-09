@@ -10,60 +10,17 @@ use Versionist\ApiVersionist\Registry\TransformerRegistry;
 use Versionist\ApiVersionist\Support\VersionParser;
 
 /**
- * Negotiates the effective API version for an incoming request.
+ * Resolves the effective API version for a request.
  *
- * Combines the VersionDetector (which extracts the raw version from the
- * request) with the TransformerRegistry (which knows valid versions) and
- * the package configuration (which defines defaults and strict mode).
- *
- * ## Resolution flow
- *
- * ```
- * Request
- *   │
- *   ▼
- * VersionDetector::detect()  ──▶  raw version string (or null)
- *   │
- *   ▼
- * Null? ──yes──▶ use default_version from config
- *   │
- *   no
- *   │
- *   ▼
- * Registered in registry?
- *   │         │
- *  yes        no
- *   │         │
- *   │     strict_mode?
- *   │      │        │
- *   │     yes       no
- *   │      │        │
- *   │  THROW    use default_version
- *   │
- *   ▼
- * Return normalized version
- * ```
- *
- * The negotiator also provides deprecation introspection: checking whether
- * a version is deprecated, retrieving its sunset date, and building the
- * standard RFC 8594 deprecation response headers.
+ * Detects version from request, validates against registry, falls back
+ * to default_version. In strict mode, unknown versions throw.
+ * Also handles RFC 8594 deprecation headers.
  */
 final class VersionNegotiator
 {
-    /**
-     * The resolved package configuration array.
-     *
-     * @var array<string, mixed>
-     */
+    /** @var array<string, mixed> */
     private readonly array $config;
 
-    /**
-     * Create a new VersionNegotiator instance.
-     *
-     * @param  VersionDetector       $detector  The version detection engine.
-     * @param  TransformerRegistry   $registry  The transformer registry for version validation.
-     * @param  array<string, mixed>  $config    The api-versionist configuration array.
-     */
     public function __construct(
         private readonly VersionDetector $detector,
         private readonly TransformerRegistry $registry,
@@ -73,36 +30,20 @@ final class VersionNegotiator
     }
 
     /**
-     * Negotiate the effective API version for the given request.
-     *
-     * 1. Attempt to detect a version from the request via the detector.
-     * 2. If nothing detected, fall back to `default_version` from config.
-     * 3. If detected but not registered in the registry:
-     *    - strict_mode=true  → throw UnknownVersionException
-     *    - strict_mode=false → fall back to `default_version`
-     * 4. Return the normalized, validated version string.
-     *
-     * @param  Request  $request  The incoming HTTP request.
-     * @return string             The normalized, resolved API version string.
-     *
-     * @throws UnknownVersionException When strict mode is enabled and the
-     *                                 detected version is not registered.
+     * @throws UnknownVersionException in strict mode for unknown versions
      */
     public function negotiate(Request $request): string
     {
         $detected = $this->detector->detect($request);
 
-        // ── Nothing detected → use the configured default ──
         if ($detected === null) {
             return VersionParser::parse($this->defaultVersion());
         }
 
-        // ── Detected a version — validate against the registry ──
         if ($this->registry->isKnownVersion($detected)) {
             return VersionParser::parse($detected);
         }
 
-        // ── Unknown version — behavior depends on strict mode ──
         if ($this->isStrictMode()) {
             throw UnknownVersionException::forVersion(
                 $detected,
@@ -110,20 +51,9 @@ final class VersionNegotiator
             );
         }
 
-        // Non-strict: silently fall back to default.
         return VersionParser::parse($this->defaultVersion());
     }
 
-    /**
-     * Check whether a version is deprecated.
-     *
-     * A version is deprecated if it appears as a key in the
-     * `deprecated_versions` config map — regardless of whether a
-     * sunset date has been set.
-     *
-     * @param  string  $version  The version string to check.
-     * @return bool              True if the version is deprecated.
-     */
     public function isDeprecated(string $version): bool
     {
         $normalized = VersionParser::parse($version);
@@ -134,16 +64,6 @@ final class VersionNegotiator
         return array_key_exists($normalized, $deprecated);
     }
 
-    /**
-     * Retrieve the sunset date for a deprecated version.
-     *
-     * Returns the ISO-8601 date string from the `deprecated_versions`
-     * config map, or null if no sunset date is set or the version is
-     * not deprecated.
-     *
-     * @param  string  $version  The version string to look up.
-     * @return string|null       The ISO-8601 sunset date, or null.
-     */
     public function getSunsetDate(string $version): ?string
     {
         $normalized = VersionParser::parse($version);
@@ -160,27 +80,7 @@ final class VersionNegotiator
         return is_string($date) && $date !== '' ? $date : null;
     }
 
-    /**
-     * Build RFC 8594 deprecation and informational response headers.
-     *
-     * Returns an associative array of header name → value pairs that
-     * should be added to the API response. Always includes version
-     * identification headers; conditionally adds Deprecation and Sunset
-     * headers when the resolved version is deprecated.
-     *
-     * ## Headers produced
-     *
-     * | Header               | When                    | Example                |
-     * |----------------------|-------------------------|------------------------|
-     * | X-Api-Version        | Always                  | v1                     |
-     * | X-Api-Latest-Version | Always                  | v3                     |
-     * | Deprecation          | Version is deprecated   | true                   |
-     * | Sunset               | Sunset date is set      | 2025-06-01             |
-     *
-     * @param  string  $version  The resolved client version.
-     * @param  string  $latest   The latest available version.
-     * @return array<string, string>  Header name → value pairs.
-     */
+    /** @return array<string, string> Version + deprecation headers per RFC 8594 */
     public function buildDeprecationHeaders(string $version, string $latest): array
     {
         $normalized      = VersionParser::parse($version);
@@ -191,17 +91,11 @@ final class VersionNegotiator
             'X-Api-Latest-Version' => $normalizedLatest,
         ];
 
-        // Add deprecation headers only when the version is explicitly
-        // listed in the deprecated_versions config.
         if ($this->isDeprecated($normalized)) {
-            // RFC 8594 §2: The "Deprecation" header field value is either
-            // a date or the boolean "true".
             $headers['Deprecation'] = 'true';
 
             $sunset = $this->getSunsetDate($normalized);
-
             if ($sunset !== null) {
-                // RFC 8594 §3: Sunset header indicates the removal date.
                 $headers['Sunset'] = $sunset;
             }
         }
@@ -209,21 +103,11 @@ final class VersionNegotiator
         return $headers;
     }
 
-    /**
-     * Return the configured default version string.
-     *
-     * @return string  The raw default version from config.
-     */
     private function defaultVersion(): string
     {
         return $this->config['default_version'] ?? 'v1';
     }
 
-    /**
-     * Check whether strict mode is enabled in the configuration.
-     *
-     * @return bool  True if strict mode is on.
-     */
     private function isStrictMode(): bool
     {
         return (bool) ($this->config['strict_mode'] ?? false);

@@ -7,27 +7,11 @@ namespace Versionist\ApiVersionist\Exceptions;
 use InvalidArgumentException;
 use Versionist\ApiVersionist\Contracts\VersionTransformerInterface;
 
-/**
- * Thrown when a class does not implement the required transformer interface
- * or is otherwise invalid for use as a version transformer.
- */
+/** Thrown when a class is not a valid version transformer. */
 final class InvalidTransformerException extends InvalidArgumentException
 {
-    /**
-     * The fully-qualified class name of the invalid transformer.
-     *
-     * @var string
-     */
     public readonly string $transformerClass;
 
-    /**
-     * Create a new InvalidTransformerException instance.
-     *
-     * @param  string          $transformerClass  The FQCN of the invalid transformer.
-     * @param  string          $reason            A human-readable reason why the class is invalid.
-     * @param  int             $code              The exception code.
-     * @param  \Throwable|null $previous          The previous throwable for chaining.
-     */
     public function __construct(
         string $transformerClass,
         string $reason = '',
@@ -50,12 +34,6 @@ final class InvalidTransformerException extends InvalidArgumentException
         parent::__construct($message, $code, $previous);
     }
 
-    /**
-     * Named constructor for a class that does not implement the transformer interface.
-     *
-     * @param  string  $class  The FQCN that failed validation.
-     * @return static
-     */
     public static function forClass(string $class): static
     {
         return new static(
@@ -64,12 +42,6 @@ final class InvalidTransformerException extends InvalidArgumentException
         );
     }
 
-    /**
-     * Named constructor for a class that does not exist.
-     *
-     * @param  string  $class  The FQCN that could not be found.
-     * @return static
-     */
     public static function classNotFound(string $class): static
     {
         return new static($class, 'Class does not exist.');

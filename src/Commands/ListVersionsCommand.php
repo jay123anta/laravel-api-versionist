@@ -8,67 +8,18 @@ use Illuminate\Console\Command;
 use Versionist\ApiVersionist\Manager\ApiVersionistManager;
 use Versionist\ApiVersionist\Version\VersionNegotiator;
 
-/**
- * List all registered API versions in a tabular format.
- *
- * Optionally shows the step-by-step upgrade and downgrade chain paths
- * between each version pair with the --chains flag.
- *
- * ## Sample terminal output
- *
- * ```
- *  API Versions
- *
- *  +---------+----------------------------------+--------------+-------------+
- *  | Version | Transformer Class                | Status       | Released At |
- *  +---------+----------------------------------+--------------+-------------+
- *  | v1      | —                                | Baseline     | —           |
- *  | v2      | App\Api\Transformers\V2Transform | Active       | 2024-03-15  |
- *  | v3      | App\Api\Transformers\V3Transform | LATEST       | 2024-09-01  |
- *  +---------+----------------------------------+--------------+-------------+
- *
- *  --chains output:
- *
- *  Upgrade Chains
- *    v1 → v3 : V2Transformer → V3Transformer
- *    v1 → v2 : V2Transformer
- *    v2 → v3 : V3Transformer
- *
- *  Downgrade Chains
- *    v3 → v1 : V3Transformer → V2Transformer
- *    v3 → v2 : V3Transformer
- *    v2 → v1 : V2Transformer
- * ```
- */
+/** List all registered API versions and their transformers. */
 class ListVersionsCommand extends Command
 {
-    /**
-     * The console command signature.
-     *
-     * @var string
-     */
     protected $signature = 'api:versions
         {--chains : Show step-by-step upgrade and downgrade chain paths}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'List all registered API versions and their transformers';
 
-    /**
-     * Execute the console command.
-     *
-     * @param  ApiVersionistManager  $manager     The versioning manager.
-     * @param  VersionNegotiator     $negotiator  The version negotiator (for deprecation info).
-     * @return int                                Exit code.
-     */
     public function handle(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
     {
         $registry = $manager->getRegistry();
 
-        // ── Handle empty registry ──
         if ($registry->all() === []) {
             $this->warn('No transformers registered.');
             $this->line('');
@@ -82,7 +33,6 @@ class ListVersionsCommand extends Command
         $latest   = $registry->latestVersion();
         $versions = $registry->getVersions();
 
-        // ── Build table rows ──
         $rows = [];
 
         foreach ($versions as $version) {
@@ -101,7 +51,6 @@ class ListVersionsCommand extends Command
 
             $transformer = $registry->getTransformer($version);
 
-            // ── Status with color ──
             if ($isLatest) {
                 $status = '<fg=green;options=bold>LATEST</>';
             } elseif ($negotiator->isDeprecated($version)) {
@@ -132,7 +81,6 @@ class ListVersionsCommand extends Command
             $rows,
         );
 
-        // ── Optional chain output ──
         if ($this->option('chains')) {
             $this->renderChains($manager, $versions, $baseline);
         }
@@ -142,19 +90,10 @@ class ListVersionsCommand extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * Render upgrade and downgrade chains between all version pairs.
-     *
-     * @param  ApiVersionistManager  $manager
-     * @param  array<int, string>    $versions  All known versions (ascending).
-     * @param  string                $baseline  The baseline version.
-     * @return void
-     */
     private function renderChains(ApiVersionistManager $manager, array $versions, string $baseline): void
     {
         $registry = $manager->getRegistry();
 
-        // ── Upgrade chains ──
         $this->line('');
         $this->line('  <fg=cyan;options=bold>Upgrade Chains</>');
 
@@ -187,7 +126,6 @@ class ListVersionsCommand extends Command
             $this->line('    <fg=gray>No upgrade chains available.</>');
         }
 
-        // ── Downgrade chains ──
         $this->line('');
         $this->line('  <fg=cyan;options=bold>Downgrade Chains</>');
 
@@ -221,12 +159,6 @@ class ListVersionsCommand extends Command
         }
     }
 
-    /**
-     * Extract the short class name (without namespace) for display.
-     *
-     * @param  string  $fqcn  Fully-qualified class name.
-     * @return string         Short class name.
-     */
     private function shortClassName(string $fqcn): string
     {
         $parts = explode('\\', $fqcn);
