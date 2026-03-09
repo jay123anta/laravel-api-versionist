@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/packagist/l/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
 [![Total Downloads](https://img.shields.io/packagist/dt/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
 
-Laravel API Versionist handles the messy work of supporting multiple API versions. You write small transformer classes that describe what changed between versions, and the package automatically converts requests and responses on every API call — so your controllers only ever speak the latest version.
+Inspired by how companies like Stripe and Mailchimp handle versioning — transformer classes that isolate version differences from your business logic. You write small transformer classes that describe what changed between versions, and the package automatically converts requests and responses on every API call — so your controllers only ever speak the latest version.
 
 Supports Laravel 10 & 11 · PHP 8.1+ · 110 tests, 224 assertions
 
@@ -21,19 +21,20 @@ Supports Laravel 10 & 11 · PHP 8.1+ · 110 tests, 224 assertions
 3. [Installation](#installation)
 4. [Quick Start](#quick-start)
 5. [Core Concept — Transformers](#core-concept--transformers)
-6. [Multi-Version Walkthrough](#multi-version-walkthrough)
-7. [Version Detection](#version-detection)
-8. [Configuration Reference](#configuration-reference)
-9. [Response Headers](#response-headers)
-10. [Request Macros](#request-macros)
-11. [Artisan Commands](#artisan-commands)
-12. [Envelope Mode](#envelope-mode)
-13. [Known Limitations](#known-limitations)
-14. [Real-World Example](#real-world-example)
-15. [Testing Your Transformers](#testing-your-transformers)
-16. [FAQ](#faq)
-17. [Contributing](#contributing)
-18. [License](#license)
+6. [When NOT to use transformers](#when-not-to-use-transformers)
+7. [Multi-Version Walkthrough](#multi-version-walkthrough)
+8. [Version Detection](#version-detection)
+9. [Configuration Reference](#configuration-reference)
+10. [Response Headers](#response-headers)
+11. [Request Macros](#request-macros)
+12. [Artisan Commands](#artisan-commands)
+13. [Envelope Mode](#envelope-mode)
+14. [Known Limitations](#known-limitations)
+15. [Real-World Example](#real-world-example)
+16. [Testing Your Transformers](#testing-your-transformers)
+17. [FAQ](#faq)
+18. [Contributing](#contributing)
+19. [License](#license)
 
 ---
 
@@ -428,6 +429,52 @@ final class V2Transformer extends ApiVersionTransformer
 ```
 
 > **Important:** Each transformer only describes what changed IN ITS version. A V2Transformer handles the v1-to-v2 transition. A V3Transformer handles v2-to-v3. Nothing more. The package chains them together automatically.
+
+### Injecting dependencies into transformers
+
+Transformers are resolved through Laravel's service container, so constructor injection works out of the box:
+
+```php
+final class V3Transformer extends ApiVersionTransformer
+{
+    public function __construct(
+        private readonly UserRepository $repo
+    ) {}
+
+    public function version(): string { return 'v3'; }
+    public function description(): string { return 'Added legacy_role lookup.'; }
+
+    public function downgradeResponse(array $data): array
+    {
+        // Look up legacy data that the new API no longer returns
+        if (isset($data['user_id'])) {
+            $data['legacy_role'] = $this->repo->getLegacyRole($data['user_id']);
+        }
+        return $data;
+    }
+}
+```
+
+Keep transformer DB access read-only and lightweight. If a transformer needs heavy queries, the version gap may be too wide for this pattern — consider separate controllers instead.
+
+---
+
+## When NOT to use transformers
+
+Transformers handle **data shape changes** only — field renames, restructures, type conversions.
+
+For behavior changes, use the request macros the package already provides:
+```php
+if ($request->isApiVersionAtLeast('v3')) {
+    // new pricing logic, auth behavior, business rules
+}
+```
+
+Transformers = structure. Application code = behavior.
+
+If your breaking change is behavioral (not structural), separate controllers
+may be a cleaner solution. This pattern works best when versions differ in
+payload shape, not in business logic.
 
 ---
 
@@ -877,6 +924,22 @@ return response()->json([
 
 **Workaround:** Structure your responses so that all transformable data lives at the top level or inside the configured `response_data_key`. For example, return the user object directly instead of nesting it under a `"user"` key.
 
+### When separate controllers are a better choice
+
+This pattern works best for **structural changes** — field renames, payload
+reshaping, type conversions, adding/removing fields.
+
+Consider separate controllers instead when:
+- Breaking changes are behavioral, not structural (different auth logic,
+  different pricing calculations, fundamentally different business rules)
+- Version differences are so large that transformers become complex and hard to read
+- You are maintaining a 10+ year old legacy system where scattered logic
+  makes debugging harder
+
+There is no universally correct approach. Transformers reduce duplication
+for structural versioning. Separate controllers give clearer isolation when
+behavior diverges significantly.
+
 ---
 
 ## Real-World Example
@@ -1201,6 +1264,10 @@ Yes. If a v1 client calls your v3 API, the package runs V2Transformer then V3Tra
 **Q: What happens to fields I don't mention in the transformer?**
 
 They pass through unchanged. If your v2 adds a `full_name` field but the request also has `age`, `city`, and `custom_field`, those fields come through untouched. Transformers only modify the fields they explicitly touch.
+
+**Q: Can I use date-based versions like Mailchimp instead of v1, v2?**
+
+Not currently. The version parser only accepts numeric formats like `v1`, `2`, `v2.1`. Date-based strings like `2024-01-15` will be rejected. If there's demand for date-based versioning, it could be added in a future release — open an issue if this matters to you.
 
 ---
 
