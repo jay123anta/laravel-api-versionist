@@ -97,6 +97,10 @@ final class VersionDetector implements VersionDetectorInterface
                 continue;
             }
 
+            // Sanitize: strip control characters and limit length to
+            // prevent abuse through oversized or malformed version strings.
+            $detected = self::sanitize($detected);
+
             // Normalize the detected value. If it's not a valid version
             // string (e.g. user sent garbage), skip it and try the next
             // strategy rather than blowing up.
@@ -109,6 +113,21 @@ final class VersionDetector implements VersionDetectorInterface
 
         // No strategy produced a valid version.
         return null;
+    }
+
+    /**
+     * Sanitize a raw version string from user input.
+     *
+     * Strips control characters, trims whitespace, and enforces a
+     * maximum length to prevent abuse through oversized strings.
+     */
+    private static function sanitize(string $value): string
+    {
+        // Strip any control characters (tabs, newlines, null bytes, etc.)
+        $value = preg_replace('/[\x00-\x1F\x7F]/u', '', $value) ?? $value;
+
+        // Trim whitespace and limit to 32 chars — no valid version is longer.
+        return substr(trim($value), 0, 32);
     }
 
     /**

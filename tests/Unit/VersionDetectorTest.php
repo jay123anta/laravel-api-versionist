@@ -254,4 +254,35 @@ final class VersionDetectorTest extends TestCase
 
         $this->assertSame('v2', $detector->detect($request));
     }
+
+    // ──────────────────────────────────────────────────────────
+    //  Sanitization
+    // ──────────────────────────────────────────────────────────
+
+    #[Test]
+    public function it_strips_control_characters_from_version(): void
+    {
+        $detector = $this->makeDetector([
+            'detection_strategies' => ['header'],
+        ]);
+
+        $request = Request::create('/api/users', 'GET');
+        $request->headers->set('X-Api-Version', "v2\x00\x0a");
+
+        $this->assertSame('v2', $detector->detect($request));
+    }
+
+    #[Test]
+    public function it_rejects_oversized_version_strings(): void
+    {
+        $detector = $this->makeDetector([
+            'detection_strategies' => ['header'],
+        ]);
+
+        $request = Request::create('/api/users', 'GET');
+        $request->headers->set('X-Api-Version', str_repeat('v1', 100));
+
+        // After truncation to 32 chars, this won't be a valid version
+        $this->assertNull($detector->detect($request));
+    }
 }

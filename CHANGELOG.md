@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-09
+
+### Added
+
+- **Date-based versioning** — `VersionParser` now accepts ISO date versions like `2024-01-15` alongside numeric `v1`, `v2.1` formats. Dates are compared chronologically.
+- **Laravel 12 support** — Updated all `illuminate/*` dependencies to `^10.0|^11.0|^12.0` and `orchestra/testbench` to `^8.0|^9.0|^10.0`.
+- **Pipeline error wrapping** — `RequestUpgradePipeline` and `ResponseDowngradePipeline` now catch transformer exceptions and re-throw with the transformer class name for easier debugging.
+- **Version string sanitization** — `VersionDetector` strips control characters and enforces a max length on detected version strings before parsing.
+
+### Changed
+
+- `MakeTransformerCommand` now handles date-based version strings when generating class names.
+- `TransformerRegistry::baselineVersion()` derives the baseline as one day prior for date-based versions.
+
 ## [1.0.0] - 2024-09-01
 
 ### Added
@@ -57,4 +71,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `request_data_key` config for enveloped request payloads
   - Non-data keys (meta, links, pagination) pass through untouched
 
-[1.0.0]: https://github.com/jayanta/laravel-api-versionist/releases/tag/v1.0.0
+[1.1.0]: https://github.com/jay123anta/laravel-api-versionist/releases/tag/v1.1.0
+[1.0.0]: https://github.com/jay123anta/laravel-api-versionist/releases/tag/v1.0.0

@@ -62,7 +62,19 @@ final class RequestUpgradePipeline
         // Fold: pipe the data through each transformer in ascending order.
         // Each step transforms the payload one version forward.
         foreach ($chain as $transformer) {
-            $data = $transformer->upgradeRequest($data);
+            try {
+                $data = $transformer->upgradeRequest($data);
+            } catch (\Throwable $e) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Transformer %s::upgradeRequest() failed: %s',
+                        $transformer::class,
+                        $e->getMessage()
+                    ),
+                    0,
+                    $e
+                );
+            }
         }
 
         return $data;

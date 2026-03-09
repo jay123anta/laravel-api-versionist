@@ -41,7 +41,7 @@ class MakeTransformerCommand extends Command
      * @var string
      */
     protected $signature = 'api:make-transformer
-        {version : The API version to create a transformer for (e.g. v2, 3, v2.1)}
+        {version : The API version to create a transformer for (e.g. v2, 3, v2.1, 2024-01-15)}
         {--path=app/Api/Transformers : The directory to place the transformer in}
         {--force : Overwrite the file if it already exists}';
 
@@ -65,7 +65,7 @@ class MakeTransformerCommand extends Command
         // ── Validate version string ──
         if (! VersionParser::isValid($rawVersion)) {
             $this->error("Invalid version string: \"{$rawVersion}\"");
-            $this->line('  Expected format: v2, 3, v2.1, etc.');
+            $this->line('  Expected format: v2, 3, v2.1, 2024-01-15, etc.');
 
             return self::FAILURE;
         }
@@ -73,8 +73,8 @@ class MakeTransformerCommand extends Command
         $version = VersionParser::parse($rawVersion);
 
         // ── Derive class name and namespace ──
-        // "v2" → "V2Transformer", "v2.1" → "V2_1Transformer"
-        $classVersion = strtoupper(str_replace('.', '_', ltrim($version, 'v')));
+        // "v2" → "V2Transformer", "v2.1" → "V2_1Transformer", "2024-01-15" → "V2024_01_15Transformer"
+        $classVersion = strtoupper(str_replace(['.', '-'], '_', ltrim($version, 'v')));
         $className    = "V{$classVersion}Transformer";
 
         $relativePath = str_replace('\\', '/', $this->option('path'));

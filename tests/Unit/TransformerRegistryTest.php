@@ -314,4 +314,81 @@ final class TransformerRegistryTest extends TestCase
         $this->assertCount(1, $chain);
         $this->assertSame($t2, $chain[0]);
     }
+
+    // ──────────────────────────────────────────────────────────
+    //  Date-based versions
+    // ──────────────────────────────────────────────────────────
+
+    #[Test]
+    public function it_registers_and_sorts_date_based_transformers(): void
+    {
+        $t1 = $this->makeTransformer('2024-06-01');
+        $t2 = $this->makeTransformer('2024-01-15');
+        $t3 = $this->makeTransformer('2025-01-01');
+
+        $this->registry->register($t1);
+        $this->registry->register($t2);
+        $this->registry->register($t3);
+
+        $this->assertSame(['2024-01-15', '2024-06-01', '2025-01-01'], array_keys($this->registry->all()));
+    }
+
+    #[Test]
+    public function it_derives_date_baseline_as_one_day_before_lowest(): void
+    {
+        $this->registry->register($this->makeTransformer('2024-01-15'));
+
+        $this->assertSame('2024-01-14', $this->registry->baselineVersion());
+    }
+
+    #[Test]
+    public function it_builds_upgrade_chain_for_date_versions(): void
+    {
+        $t1 = $this->makeTransformer('2024-06-01');
+        $t2 = $this->makeTransformer('2025-01-01');
+        $this->registry->register($t1)->register($t2);
+
+        $chain = $this->registry->getUpgradeChain('2024-05-31', '2025-01-01');
+
+        $this->assertCount(2, $chain);
+        $this->assertSame($t1, $chain[0]);
+        $this->assertSame($t2, $chain[1]);
+    }
+
+    #[Test]
+    public function it_builds_downgrade_chain_for_date_versions(): void
+    {
+        $t1 = $this->makeTransformer('2024-06-01');
+        $t2 = $this->makeTransformer('2025-01-01');
+        $this->registry->register($t1)->register($t2);
+
+        $chain = $this->registry->getDowngradeChain('2025-01-01', '2024-05-31');
+
+        $this->assertCount(2, $chain);
+        $this->assertSame($t2, $chain[0]);
+        $this->assertSame($t1, $chain[1]);
+    }
+
+    #[Test]
+    public function it_returns_latest_date_version(): void
+    {
+        $this->registry->registerMany([
+            $this->makeTransformer('2024-01-15'),
+            $this->makeTransformer('2025-01-01'),
+            $this->makeTransformer('2024-06-01'),
+        ]);
+
+        $this->assertSame('2025-01-01', $this->registry->latestVersion());
+    }
+
+    #[Test]
+    public function it_includes_date_baseline_in_versions_list(): void
+    {
+        $this->registry->registerMany([
+            $this->makeTransformer('2024-06-01'),
+            $this->makeTransformer('2025-01-01'),
+        ]);
+
+        $this->assertSame(['2024-05-31', '2024-06-01', '2025-01-01'], $this->registry->getVersions());
+    }
 }

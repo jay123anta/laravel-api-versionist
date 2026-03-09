@@ -125,4 +125,34 @@ final class ResponseDowngradePipelineTest extends TestCase
 
         $this->assertSame(['id' => 1, 'downgraded' => true], $result);
     }
+
+    #[Test]
+    public function it_wraps_transformer_exception_with_class_name(): void
+    {
+        $this->registry->register($this->makeTransformer('v2', downgrade: function (array $data): array {
+            throw new \InvalidArgumentException('corrupt data');
+        }));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/downgradeResponse\(\) failed: corrupt data/');
+
+        $this->pipeline->run(['id' => 1], 'v2', 'v1');
+    }
+
+    #[Test]
+    public function it_preserves_original_exception_as_previous(): void
+    {
+        $original = new \LogicException('original error');
+
+        $this->registry->register($this->makeTransformer('v2', downgrade: function (array $data) use ($original): array {
+            throw $original;
+        }));
+
+        try {
+            $this->pipeline->run([], 'v2', 'v1');
+            $this->fail('Expected RuntimeException');
+        } catch (\RuntimeException $e) {
+            $this->assertSame($original, $e->getPrevious());
+        }
+    }
 }

@@ -62,7 +62,19 @@ final class ResponseDowngradePipeline
         // Fold: pipe the data through each transformer in descending order.
         // Each step transforms the payload one version backward.
         foreach ($chain as $transformer) {
-            $data = $transformer->downgradeResponse($data);
+            try {
+                $data = $transformer->downgradeResponse($data);
+            } catch (\Throwable $e) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Transformer %s::downgradeResponse() failed: %s',
+                        $transformer::class,
+                        $e->getMessage()
+                    ),
+                    0,
+                    $e
+                );
+            }
         }
 
         return $data;

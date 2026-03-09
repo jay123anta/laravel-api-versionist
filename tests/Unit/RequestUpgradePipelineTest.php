@@ -112,4 +112,34 @@ final class RequestUpgradePipelineTest extends TestCase
 
         $this->assertSame(['id' => 1, 'upgraded' => true], $result);
     }
+
+    #[Test]
+    public function it_wraps_transformer_exception_with_class_name(): void
+    {
+        $this->registry->register($this->makeTransformer('v2', upgrade: function (array $data): array {
+            throw new \InvalidArgumentException('bad input');
+        }));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/upgradeRequest\(\) failed: bad input/');
+
+        $this->pipeline->run(['id' => 1], 'v1', 'v2');
+    }
+
+    #[Test]
+    public function it_preserves_original_exception_as_previous(): void
+    {
+        $original = new \LogicException('original error');
+
+        $this->registry->register($this->makeTransformer('v2', upgrade: function (array $data) use ($original): array {
+            throw $original;
+        }));
+
+        try {
+            $this->pipeline->run([], 'v1', 'v2');
+            $this->fail('Expected RuntimeException');
+        } catch (\RuntimeException $e) {
+            $this->assertSame($original, $e->getPrevious());
+        }
+    }
 }

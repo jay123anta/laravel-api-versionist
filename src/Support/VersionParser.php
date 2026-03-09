@@ -8,43 +8,39 @@ namespace Versionist\ApiVersionist\Support;
  * Utility class for parsing, normalizing, and comparing API version strings.
  *
  * Handles various formats clients may send:
- *   - "2"    → "v2"
- *   - "V2"   → "v2"
- *   - "v2"   → "v2"
- *   - "2.1"  → "v2.1"
- *   - "v2.1" → "v2.1"
+ *   - "2"          → "v2"
+ *   - "V2"         → "v2"
+ *   - "v2"         → "v2"
+ *   - "2.1"        → "v2.1"
+ *   - "v2.1"       → "v2.1"
+ *   - "2024-01-15" → "2024-01-15"  (date-based)
  *
  * All public methods are static — this class is not meant to be instantiated.
  */
 final class VersionParser
 {
     /**
-     * Regex pattern matching a valid version string.
-     *
-     * Accepts an optional "v"/"V" prefix followed by a major version number
-     * and an optional dot-separated minor version number.
+     * Regex matching a numeric version string (v1, v2.1, etc.).
      */
-    private const VERSION_PATTERN = '/^[vV]?(\d+)(\.\d+)?$/';
+    private const NUMERIC_PATTERN = '/^[vV]?(\d+)(\.\d+)?$/';
 
     /**
-     * Prevent instantiation.
+     * Regex matching a date-based version string (2024-01-15, etc.).
      */
+    private const DATE_PATTERN = '/^\d{4}-\d{2}-\d{2}$/';
+
     private function __construct()
     {
     }
 
     /**
-     * Parse and normalize a version string to the canonical "vX" or "vX.Y" format.
+     * Parse and normalize a version string.
      *
-     * Examples:
-     *   - parse("2")    → "v2"
-     *   - parse("V2")   → "v2"
-     *   - parse("v2")   → "v2"
-     *   - parse("2.1")  → "v2.1"
-     *   - parse("v2.1") → "v2.1"
+     * Numeric versions are normalized to "vX" or "vX.Y" format.
+     * Date-based versions are returned as-is (YYYY-MM-DD).
      *
      * @param  string  $version  The raw version string to normalize.
-     * @return string            The normalized version string (always lowercase "v" prefix).
+     * @return string            The normalized version string.
      *
      * @throws \InvalidArgumentException If the version string is not valid.
      */
@@ -54,11 +50,16 @@ final class VersionParser
 
         if (! self::isValid($version)) {
             throw new \InvalidArgumentException(
-                sprintf('Invalid version string: "%s". Expected format: "v1", "2", "v2.1", etc.', $version)
+                sprintf('Invalid version string: "%s". Expected format: "v1", "2", "v2.1", or "2024-01-15".', $version)
             );
         }
 
-        // Strip any existing v/V prefix, then re-add lowercase "v".
+        // Date-based versions are already in canonical form.
+        if (self::isDate($version)) {
+            return $version;
+        }
+
+        // Numeric: strip any v/V prefix, re-add lowercase "v".
         $normalized = ltrim($version, 'vV');
 
         return 'v' . strtolower($normalized);
@@ -70,7 +71,8 @@ final class VersionParser
      * Returns a negative integer, zero, or positive integer when the first
      * version is respectively less than, equal to, or greater than the second.
      *
-     * Both values are normalized before comparison.
+     * Both numeric and date-based versions are supported. Date versions
+     * are converted to dot-separated segments for comparison via version_compare().
      *
      * @param  string  $versionA  The first version string.
      * @param  string  $versionB  The second version string.
@@ -83,31 +85,35 @@ final class VersionParser
         $a = self::parse($versionA);
         $b = self::parse($versionB);
 
-        // Use version_compare which handles "v" prefix and dot-separated segments.
+        // Normalize both to dot-separated numeric strings for version_compare().
+        // "v2.1" → "2.1", "2024-01-15" → "2024.01.15"
         return version_compare(
-            ltrim($a, 'v'),
-            ltrim($b, 'v')
+            self::toComparable($a),
+            self::toComparable($b)
         );
     }
 
     /**
-     * Extract the major version number from a version string.
+     * Extract the major version number from a numeric version string.
      *
-     * Examples:
-     *   - extractNumber("v2")   → 2
-     *   - extractNumber("v2.1") → 2
-     *   - extractNumber("3")    → 3
+     * Not supported for date-based versions — use isDate() to check first.
      *
      * @param  string  $version  The version string to extract from.
      * @return int               The major version number.
      *
-     * @throws \InvalidArgumentException If the version string is not valid.
+     * @throws \InvalidArgumentException If the version string is not valid or is date-based.
      */
     public static function extractNumber(string $version): int
     {
         $normalized = self::parse($version);
 
-        preg_match(self::VERSION_PATTERN, $normalized, $matches);
+        if (self::isDate($normalized)) {
+            throw new \InvalidArgumentException(
+                sprintf('Cannot extract major number from date-based version: "%s".', $normalized)
+            );
+        }
+
+        preg_match(self::NUMERIC_PATTERN, $normalized, $matches);
 
         return (int) $matches[1];
     }
@@ -115,14 +121,55 @@ final class VersionParser
     /**
      * Check whether a given string is a valid version identifier.
      *
-     * A valid version string has an optional "v"/"V" prefix, followed by
-     * one or more digits, optionally followed by a dot and more digits.
+     * Accepts numeric versions (v1, 2, v2.1) and date-based versions (2024-01-15).
      *
      * @param  string  $version  The version string to validate.
      * @return bool              True if valid, false otherwise.
      */
     public static function isValid(string $version): bool
     {
-        return (bool) preg_match(self::VERSION_PATTERN, trim($version));
+        $version = trim($version);
+
+        if ((bool) preg_match(self::NUMERIC_PATTERN, $version)) {
+            return true;
+        }
+
+        return self::isDate($version);
+    }
+
+    /**
+     * Check whether a version string is in date format (YYYY-MM-DD).
+     *
+     * Validates both the format and the actual date (rejects 2024-13-45).
+     *
+     * @param  string  $version  The version string to check.
+     * @return bool              True if date-based, false otherwise.
+     */
+    public static function isDate(string $version): bool
+    {
+        $version = trim($version);
+
+        if (! preg_match(self::DATE_PATTERN, $version)) {
+            return false;
+        }
+
+        // Validate actual date — reject things like 2024-13-45.
+        $parts = explode('-', $version);
+
+        return checkdate((int) $parts[1], (int) $parts[2], (int) $parts[0]);
+    }
+
+    /**
+     * Convert a parsed version string to a dot-separated format for version_compare().
+     *
+     * "v2.1" → "2.1", "2024-01-15" → "2024.01.15"
+     */
+    private static function toComparable(string $parsed): string
+    {
+        // Strip v prefix for numeric versions.
+        $result = ltrim($parsed, 'v');
+
+        // Convert date dashes to dots so version_compare handles them correctly.
+        return str_replace('-', '.', $result);
     }
 }

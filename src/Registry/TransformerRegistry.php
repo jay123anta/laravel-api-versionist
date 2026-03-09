@@ -278,11 +278,19 @@ final class TransformerRegistry
 
         // The lowest registered version is the first key after sorting.
         $lowestVersion = array_key_first($this->transformers);
-        $majorNumber   = VersionParser::extractNumber($lowestVersion);
 
-        // Baseline is one major version below the lowest transformer.
+        // Date-based versions: baseline is one day before the lowest.
+        if (VersionParser::isDate($lowestVersion)) {
+            $date = new \DateTimeImmutable($lowestVersion);
+
+            return $date->modify('-1 day')->format('Y-m-d');
+        }
+
+        // Numeric versions: baseline is one major version below.
         // Guard against underflow — if lowest is v1, baseline becomes v0
         // which is still valid (represents the original un-versioned API).
+        $majorNumber = VersionParser::extractNumber($lowestVersion);
+
         return VersionParser::parse((string) max(0, $majorNumber - 1));
     }
 

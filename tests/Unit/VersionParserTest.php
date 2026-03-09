@@ -181,4 +181,82 @@ final class VersionParserTest extends TestCase
         $this->assertFalse(VersionParser::isValid('-1'));
         $this->assertFalse(VersionParser::isValid('v-1'));
     }
+
+    // ──────────────────────────────────────────────────────────
+    //  Date-based versions — parse()
+    // ──────────────────────────────────────────────────────────
+
+    #[Test]
+    public function it_parses_date_version_as_is(): void
+    {
+        $this->assertSame('2024-01-15', VersionParser::parse('2024-01-15'));
+    }
+
+    #[Test]
+    public function it_trims_whitespace_on_date_versions(): void
+    {
+        $this->assertSame('2024-01-15', VersionParser::parse('  2024-01-15  '));
+    }
+
+    #[Test]
+    public function it_throws_on_invalid_date(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        VersionParser::parse('2024-13-45');
+    }
+
+    #[Test]
+    public function it_throws_on_partial_date(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        VersionParser::parse('2024-01');
+    }
+
+    // ──────────────────────────────────────────────────────────
+    //  Date-based versions — compare()
+    // ──────────────────────────────────────────────────────────
+
+    #[Test]
+    public function it_compares_date_versions_chronologically(): void
+    {
+        $this->assertLessThan(0, VersionParser::compare('2024-01-15', '2024-06-01'));
+        $this->assertGreaterThan(0, VersionParser::compare('2025-01-01', '2024-12-31'));
+        $this->assertSame(0, VersionParser::compare('2024-01-15', '2024-01-15'));
+    }
+
+    #[Test]
+    public function it_compares_mixed_numeric_and_date_versions(): void
+    {
+        // Date versions always sort higher than numeric (2024 > any reasonable v-number).
+        $this->assertLessThan(0, VersionParser::compare('v10', '2024-01-15'));
+        $this->assertGreaterThan(0, VersionParser::compare('2024-01-15', 'v10'));
+    }
+
+    // ──────────────────────────────────────────────────────────
+    //  Date-based versions — isValid() and isDate()
+    // ──────────────────────────────────────────────────────────
+
+    #[Test]
+    public function it_validates_date_versions(): void
+    {
+        $this->assertTrue(VersionParser::isValid('2024-01-15'));
+        $this->assertTrue(VersionParser::isValid('2025-12-31'));
+        $this->assertTrue(VersionParser::isDate('2024-01-15'));
+    }
+
+    #[Test]
+    public function it_rejects_invalid_dates(): void
+    {
+        $this->assertFalse(VersionParser::isValid('2024-13-01'));
+        $this->assertFalse(VersionParser::isValid('2024-02-30'));
+        $this->assertFalse(VersionParser::isDate('v2'));
+        $this->assertFalse(VersionParser::isDate('not-a-date'));
+    }
+
+    #[Test]
+    public function it_throws_extract_number_on_date_version(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        VersionParser::extractNumber('2024-01-15');
+    }
 }
