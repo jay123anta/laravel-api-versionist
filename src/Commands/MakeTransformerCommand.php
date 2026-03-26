@@ -72,7 +72,7 @@ class MakeTransformerCommand extends Command
         $directory = dirname($filePath);
 
         if (! $files->isDirectory($directory)) {
-            $files->makeDirectory($directory, 0755, true);
+            $files->makeDirectory($directory, 0o755, true);
         }
 
         $files->put($filePath, $content);

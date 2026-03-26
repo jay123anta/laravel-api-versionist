@@ -65,7 +65,11 @@ final class VersionParser
             );
         }
 
-        preg_match(self::NUMERIC_PATTERN, $normalized, $matches);
+        if (! preg_match(self::NUMERIC_PATTERN, $normalized, $matches)) {
+            throw new \InvalidArgumentException(
+                sprintf('Cannot extract major number from version: "%s".', $normalized)
+            );
+        }
 
         return (int) $matches[1];
     }

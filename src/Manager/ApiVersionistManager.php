@@ -48,7 +48,7 @@ final class ApiVersionistManager
         $allInput       = $request->all();
 
         $originalData = $requestDataKey !== null
-            ? (array) ($allInput[$requestDataKey] ?? [])
+            ? (is_array($allInput[$requestDataKey] ?? null) ? $allInput[$requestDataKey] : [])
             : $allInput;
 
         $upgradedData = $this->upgradePipeline->run(
@@ -89,7 +89,7 @@ final class ApiVersionistManager
         $fullPayload = (array) $response->getData(true);
 
         $originalData = $responseDataKey !== null
-            ? (array) ($fullPayload[$responseDataKey] ?? [])
+            ? (is_array($fullPayload[$responseDataKey] ?? null) ? $fullPayload[$responseDataKey] : [])
             : $fullPayload;
 
         $downgradedData = $this->downgradePipeline->run(

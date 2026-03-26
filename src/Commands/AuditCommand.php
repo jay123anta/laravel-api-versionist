@@ -7,6 +7,7 @@ namespace Versionist\ApiVersionist\Commands;
 use Illuminate\Console\Command;
 use Versionist\ApiVersionist\Contracts\VersionTransformerInterface;
 use Versionist\ApiVersionist\Manager\ApiVersionistManager;
+use Versionist\ApiVersionist\Support\VersionParser;
 
 /** Audit registered transformers for correctness and common pitfalls. */
 class AuditCommand extends Command
@@ -99,7 +100,7 @@ class AuditCommand extends Command
     {
         $version = $transformer->version();
 
-        if (! \Versionist\ApiVersionist\Support\VersionParser::isValid($version)) {
+        if (! VersionParser::isValid($version)) {
             $this->fail("version() returns invalid string: \"{$version}\"");
             return;
         }
@@ -140,7 +141,7 @@ class AuditCommand extends Command
     private function dryRunPipeline(ApiVersionistManager $manager, array $sampleData, string $from, string $to): void
     {
         $registry  = $manager->getRegistry();
-        $direction = \Versionist\ApiVersionist\Support\VersionParser::compare($from, $to);
+        $direction = VersionParser::compare($from, $to);
 
         if ($direction === 0) {
             $this->line("    <fg=gray>Skipping {$from} → {$to} (same version)</>");
