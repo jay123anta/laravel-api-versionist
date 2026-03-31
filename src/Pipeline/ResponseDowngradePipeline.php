@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Versionist\ApiVersionist\Pipeline;
 
+use Versionist\ApiVersionist\Exceptions\VersionDowngradeException;
 use Versionist\ApiVersionist\Registry\TransformerRegistry;
 
 /**
@@ -25,14 +26,16 @@ final class ResponseDowngradePipeline
             try {
                 $data = $transformer->downgradeResponse($data);
             } catch (\Throwable $e) {
-                throw new \RuntimeException(
+                throw new VersionDowngradeException(
+                    $from,
+                    $to,
                     sprintf(
                         'Transformer %s::downgradeResponse() failed: %s',
                         $transformer::class,
                         $e->getMessage()
                     ),
                     0,
-                    $e
+                    $e,
                 );
             }
         }

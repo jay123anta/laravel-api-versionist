@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Versionist\ApiVersionist\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
+use Versionist\ApiVersionist\Exceptions\VersionDowngradeException;
 use Versionist\ApiVersionist\Pipeline\ResponseDowngradePipeline;
 use Versionist\ApiVersionist\Registry\TransformerRegistry;
 use Versionist\ApiVersionist\Tests\TestCase;
@@ -133,7 +134,7 @@ final class ResponseDowngradePipelineTest extends TestCase
             throw new \InvalidArgumentException('corrupt data');
         }));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(VersionDowngradeException::class);
         $this->expectExceptionMessageMatches('/downgradeResponse\(\) failed: corrupt data/');
 
         $this->pipeline->run(['id' => 1], 'v2', 'v1');
@@ -150,9 +151,11 @@ final class ResponseDowngradePipelineTest extends TestCase
 
         try {
             $this->pipeline->run([], 'v2', 'v1');
-            $this->fail('Expected RuntimeException');
-        } catch (\RuntimeException $e) {
+            $this->fail('Expected VersionDowngradeException');
+        } catch (VersionDowngradeException $e) {
             $this->assertSame($original, $e->getPrevious());
+            $this->assertSame('v2', $e->fromVersion);
+            $this->assertSame('v1', $e->toVersion);
         }
     }
 }

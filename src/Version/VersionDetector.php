@@ -106,7 +106,7 @@ final class VersionDetector implements VersionDetectorInterface
 
         $accept = $request->header('Accept', '');
 
-        if ($accept === '' || $accept === null) {
+        if ($accept === '') {
             return null;
         }
 

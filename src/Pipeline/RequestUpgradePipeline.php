@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Versionist\ApiVersionist\Pipeline;
 
+use Versionist\ApiVersionist\Exceptions\VersionUpgradeException;
 use Versionist\ApiVersionist\Registry\TransformerRegistry;
 
 /**
@@ -25,14 +26,16 @@ final class RequestUpgradePipeline
             try {
                 $data = $transformer->upgradeRequest($data);
             } catch (\Throwable $e) {
-                throw new \RuntimeException(
+                throw new VersionUpgradeException(
+                    $from,
+                    $to,
                     sprintf(
                         'Transformer %s::upgradeRequest() failed: %s',
                         $transformer::class,
                         $e->getMessage()
                     ),
                     0,
-                    $e
+                    $e,
                 );
             }
         }

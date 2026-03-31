@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Versionist\ApiVersionist\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
+use Versionist\ApiVersionist\Exceptions\VersionUpgradeException;
 use Versionist\ApiVersionist\Pipeline\RequestUpgradePipeline;
 use Versionist\ApiVersionist\Registry\TransformerRegistry;
 use Versionist\ApiVersionist\Tests\TestCase;
@@ -120,7 +121,7 @@ final class RequestUpgradePipelineTest extends TestCase
             throw new \InvalidArgumentException('bad input');
         }));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(VersionUpgradeException::class);
         $this->expectExceptionMessageMatches('/upgradeRequest\(\) failed: bad input/');
 
         $this->pipeline->run(['id' => 1], 'v1', 'v2');
@@ -137,9 +138,11 @@ final class RequestUpgradePipelineTest extends TestCase
 
         try {
             $this->pipeline->run([], 'v1', 'v2');
-            $this->fail('Expected RuntimeException');
-        } catch (\RuntimeException $e) {
+            $this->fail('Expected VersionUpgradeException');
+        } catch (VersionUpgradeException $e) {
             $this->assertSame($original, $e->getPrevious());
+            $this->assertSame('v1', $e->fromVersion);
+            $this->assertSame('v2', $e->toVersion);
         }
     }
 }
