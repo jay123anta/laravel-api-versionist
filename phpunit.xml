@@ -5,6 +5,7 @@
          colors="true"
          failOnWarning="true"
          failOnRisky="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
          stopOnFailure="false"
          cacheDirectory=".phpunit.cache">
 
