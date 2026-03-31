@@ -93,7 +93,7 @@ class AuditCommand extends Command
 
     private function auditInterface(VersionTransformerInterface $transformer): void
     {
-        $this->pass('Implements VersionTransformerInterface');
+        $this->auditPass('Implements VersionTransformerInterface');
     }
 
     private function auditVersion(VersionTransformerInterface $transformer): void
@@ -101,11 +101,11 @@ class AuditCommand extends Command
         $version = $transformer->version();
 
         if (! VersionParser::isValid($version)) {
-            $this->fail("version() returns invalid string: \"{$version}\"");
+            $this->auditFail("version() returns invalid string: \"{$version}\"");
             return;
         }
 
-        $this->pass("version() returns valid string: \"{$version}\"");
+        $this->auditPass("version() returns valid string: \"{$version}\"");
     }
 
     private function auditUpgradeRequest(VersionTransformerInterface $transformer, array $sampleData): void
@@ -114,12 +114,12 @@ class AuditCommand extends Command
             $result = $transformer->upgradeRequest($sampleData);
 
             if ($result === $sampleData) {
-                $this->warnResult('upgradeRequest() returned data unchanged (possible no-op)');
+                $this->auditWarn('upgradeRequest() returned data unchanged (possible no-op)');
             } else {
-                $this->pass('upgradeRequest() transforms data');
+                $this->auditPass('upgradeRequest() transforms data');
             }
         } catch (\Throwable $e) {
-            $this->fail('upgradeRequest() threw ' . $e::class . ': ' . $e->getMessage());
+            $this->auditFail('upgradeRequest() threw ' . $e::class . ': ' . $e->getMessage());
         }
     }
 
@@ -129,12 +129,12 @@ class AuditCommand extends Command
             $result = $transformer->downgradeResponse($sampleData);
 
             if ($result === $sampleData) {
-                $this->warnResult('downgradeResponse() returned data unchanged (possible no-op)');
+                $this->auditWarn('downgradeResponse() returned data unchanged (possible no-op)');
             } else {
-                $this->pass('downgradeResponse() transforms data');
+                $this->auditPass('downgradeResponse() transforms data');
             }
         } catch (\Throwable $e) {
-            $this->fail('downgradeResponse() threw ' . $e::class . ': ' . $e->getMessage());
+            $this->auditFail('downgradeResponse() threw ' . $e::class . ': ' . $e->getMessage());
         }
     }
 
@@ -171,26 +171,26 @@ class AuditCommand extends Command
             $count = count($chain);
             $steps = array_map(fn ($t) => $this->shortClassName($t::class), $chain);
 
-            $this->pass("{$label} {$from} → {$to}: {$count} transformer(s) applied"
+            $this->auditPass("{$label} {$from} → {$to}: {$count} transformer(s) applied"
                 . ($steps !== [] ? ' [' . implode(' → ', $steps) . ']' : ''));
         } catch (\Throwable $e) {
-            $this->fail("{$label} {$from} → {$to}: " . $e::class . ' — ' . $e->getMessage());
+            $this->auditFail("{$label} {$from} → {$to}: " . $e::class . ' — ' . $e->getMessage());
         }
     }
 
-    private function pass(string $message): void
+    private function auditPass(string $message): void
     {
         $this->line("    <fg=green>✓</> {$message}");
         $this->passed++;
     }
 
-    private function warnResult(string $message): void
+    private function auditWarn(string $message): void
     {
         $this->line("    <fg=yellow>⚠</> {$message}");
         $this->warnings++;
     }
 
-    private function fail(string $message): void
+    private function auditFail(string $message): void
     {
         $this->line("    <fg=red>✗</> {$message}");
         $this->errors++;
