@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Versionist\ApiVersionist\Tests;
 
+use Closure;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Versionist\ApiVersionist\ApiVersionistServiceProvider;
 use Versionist\ApiVersionist\ApiVersionTransformer;
@@ -80,8 +81,8 @@ abstract class TestCase extends OrchestraTestCase
         {
             public function __construct(
                 private readonly string $v,
-                private readonly ?\Closure $u,
-                private readonly ?\Closure $d,
+                private readonly ?Closure $u,
+                private readonly ?Closure $d,
                 private readonly string $de,
                 private readonly ?string $r,
             ) {}

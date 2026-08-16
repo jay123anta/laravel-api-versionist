@@ -8,7 +8,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
+use Versionist\ApiVersionist\Manager\ApiVersionistManager;
+use Versionist\ApiVersionist\Registry\TransformerRegistry;
 use Versionist\ApiVersionist\Tests\TestCase;
+use Versionist\ApiVersionist\Version\VersionDetector;
+use Versionist\ApiVersionist\Version\VersionNegotiator;
 
 /**
  * All 4 detection strategies work end-to-end through the actual middleware.
@@ -27,7 +31,7 @@ final class VersionDetectionStrategyTest extends TestCase
     {
         parent::setUp();
 
-        $registry = $this->app->make(\Versionist\ApiVersionist\Registry\TransformerRegistry::class);
+        $registry = $this->app->make(TransformerRegistry::class);
 
         $registry->register($this->makeTransformer('v2',
             downgrade: function (array $data): array {
@@ -138,9 +142,9 @@ final class VersionDetectionStrategyTest extends TestCase
         ]);
 
         // Rebuild the detector with new config
-        $this->app->forgetInstance(\Versionist\ApiVersionist\Version\VersionDetector::class);
-        $this->app->forgetInstance(\Versionist\ApiVersionist\Version\VersionNegotiator::class);
-        $this->app->forgetInstance(\Versionist\ApiVersionist\Manager\ApiVersionistManager::class);
+        $this->app->forgetInstance(VersionDetector::class);
+        $this->app->forgetInstance(VersionNegotiator::class);
+        $this->app->forgetInstance(ApiVersionistManager::class);
 
         $response = $this->getJson('/api/version-check?version=v1', [
             'X-Api-Version' => 'v2',

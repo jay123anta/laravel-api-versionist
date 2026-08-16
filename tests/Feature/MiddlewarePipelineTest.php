@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
+use Versionist\ApiVersionist\Registry\TransformerRegistry;
 use Versionist\ApiVersionist\Tests\TestCase;
 
 /**
@@ -34,7 +35,7 @@ final class MiddlewarePipelineTest extends TestCase
 
     private function registerTransformers(): void
     {
-        $registry = $this->app->make(\Versionist\ApiVersionist\Registry\TransformerRegistry::class);
+        $registry = $this->app->make(TransformerRegistry::class);
 
         // V2: name → full_name
         $registry->register($this->makeTransformer('v2',

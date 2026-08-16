@@ -8,6 +8,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
+use Versionist\ApiVersionist\Manager\ApiVersionistManager;
+use Versionist\ApiVersionist\Registry\TransformerRegistry;
 use Versionist\ApiVersionist\Tests\TestCase;
 
 /**
@@ -30,7 +32,7 @@ final class EnvelopeTransformTest extends TestCase
     {
         parent::setUp();
 
-        $registry = $this->app->make(\Versionist\ApiVersionist\Registry\TransformerRegistry::class);
+        $registry = $this->app->make(TransformerRegistry::class);
 
         // V2: name → full_name
         $registry->register($this->makeTransformer('v2',
@@ -172,7 +174,7 @@ final class EnvelopeTransformTest extends TestCase
     {
         // Override config to null (no envelope)
         $this->app['config']->set('api-versionist.response_data_key', null);
-        $this->app->forgetInstance(\Versionist\ApiVersionist\Manager\ApiVersionistManager::class);
+        $this->app->forgetInstance(ApiVersionistManager::class);
 
         Route::middleware('api.version')->get('/api/flat', function () {
             return new JsonResponse([

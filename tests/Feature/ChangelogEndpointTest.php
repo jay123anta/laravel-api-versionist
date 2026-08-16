@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Versionist\ApiVersionist\Tests\Feature;
 
 use PHPUnit\Framework\Attributes\Test;
+use Versionist\ApiVersionist\Registry\TransformerRegistry;
 use Versionist\ApiVersionist\Tests\TestCase;
 
 /**
@@ -31,7 +32,7 @@ final class ChangelogEndpointTest extends TestCase
     #[Test]
     public function it_serves_the_version_changelog_as_json(): void
     {
-        $registry = $this->app->make(\Versionist\ApiVersionist\Registry\TransformerRegistry::class);
+        $registry = $this->app->make(TransformerRegistry::class);
         $registry->register($this->makeTransformer('v2', desc: 'Rename name to full_name', releasedAt: '2025-01-01'));
 
         $response = $this->getJson('/api/versions');
@@ -61,7 +62,7 @@ final class ChangelogEndpointTest extends TestCase
     #[Test]
     public function it_does_not_expose_transformer_class_names(): void
     {
-        $registry = $this->app->make(\Versionist\ApiVersionist\Registry\TransformerRegistry::class);
+        $registry = $this->app->make(TransformerRegistry::class);
         $registry->register($this->makeTransformer('v2'));
 
         $versions = $this->getJson('/api/versions')->json('versions');

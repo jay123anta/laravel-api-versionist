@@ -6,7 +6,10 @@ namespace Versionist\ApiVersionist\Tests\Feature;
 
 use Illuminate\Http\JsonResponse;
 use PHPUnit\Framework\Attributes\Test;
+use Versionist\ApiVersionist\Manager\ApiVersionistManager;
+use Versionist\ApiVersionist\Registry\TransformerRegistry;
 use Versionist\ApiVersionist\Tests\TestCase;
+use Versionist\ApiVersionist\Version\VersionNegotiator;
 
 /**
  * Deprecated versions get Deprecation + Sunset + Link headers;
@@ -36,7 +39,7 @@ final class DeprecationHeaderTest extends TestCase
     {
         parent::setUp();
 
-        $registry = $this->app->make(\Versionist\ApiVersionist\Registry\TransformerRegistry::class);
+        $registry = $this->app->make(TransformerRegistry::class);
 
         $registry->register($this->makeTransformer('v2'));
         $registry->register($this->makeTransformer('v3'));
@@ -229,7 +232,7 @@ final class DeprecationHeaderTest extends TestCase
             $this->app['config']->set($key, $value);
         }
 
-        $this->app->forgetInstance(\Versionist\ApiVersionist\Version\VersionNegotiator::class);
-        $this->app->forgetInstance(\Versionist\ApiVersionist\Manager\ApiVersionistManager::class);
+        $this->app->forgetInstance(VersionNegotiator::class);
+        $this->app->forgetInstance(ApiVersionistManager::class);
     }
 }
