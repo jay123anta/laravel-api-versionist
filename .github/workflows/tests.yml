@@ -122,7 +122,7 @@ jobs:
         run: vendor/bin/pint --test
 
       - name: PHPStan (static analysis)
-        run: vendor/bin/phpstan analyse --no-progress
+        run: vendor/bin/phpstan analyse --no-progress --error-format=github
 
       - name: Rector (refactoring dry-run)
         run: vendor/bin/rector process --dry-run
