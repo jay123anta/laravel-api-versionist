@@ -115,10 +115,9 @@ final class DeprecationHeaderTest extends TestCase
     #[Test]
     public function it_does_not_add_headers_when_disabled(): void
     {
-        $this->app['config']->set('api-versionist.add_version_headers', false);
-
-        // Rebuild manager with new config
-        $this->app->forgetInstance(\Versionist\ApiVersionist\Manager\ApiVersionistManager::class);
+        $this->overrideConfig([
+            'api-versionist.add_version_headers' => false,
+        ]);
 
         $response = $this->getJson('/api/test', [
             'X-Api-Version' => 'v1',
@@ -130,12 +129,84 @@ final class DeprecationHeaderTest extends TestCase
     }
 
     #[Test]
+    public function it_emits_rfc_compliant_headers_when_enabled(): void
+    {
+        $this->overrideConfig([
+            'api-versionist.rfc_compliant_headers' => true,
+            'api-versionist.deprecated_versions'   => [
+                'v1' => ['deprecated_at' => '2025-01-01', 'sunset' => '2025-06-01'],
+            ],
+        ]);
+
+        $response = $this->getJson('/api/test', [
+            'X-Api-Version' => 'v1',
+        ]);
+
+        $response->assertOk();
+        // RFC 9745: @-prefixed unix timestamp for 2025-01-01T00:00:00Z
+        $response->assertHeader('Deprecation', '@1735689600');
+        // RFC 8594: Sunset as an IMF-fixdate
+        $response->assertHeader('Sunset', 'Sun, 01 Jun 2025 00:00:00 GMT');
+    }
+
+    #[Test]
+    public function rfc_mode_falls_back_to_boolean_deprecation_without_a_deprecated_at_date(): void
+    {
+        $this->overrideConfig([
+            'api-versionist.rfc_compliant_headers' => true,
+        ]);
+
+        $response = $this->getJson('/api/test', [
+            'X-Api-Version' => 'v1',
+        ]);
+
+        $response->assertOk();
+        $response->assertHeader('Deprecation', 'true');
+        $response->assertHeader('Sunset', 'Sun, 01 Jun 2025 00:00:00 GMT');
+    }
+
+    #[Test]
+    public function rfc_sunset_dates_with_utc_offsets_are_converted_to_gmt(): void
+    {
+        $this->overrideConfig([
+            'api-versionist.rfc_compliant_headers' => true,
+            'api-versionist.deprecated_versions'   => [
+                'v1' => ['sunset' => '2025-06-01T09:00:00+05:30'],
+            ],
+        ]);
+
+        $response = $this->getJson('/api/test', [
+            'X-Api-Version' => 'v1',
+        ]);
+
+        // 09:00 at +05:30 is 03:30 GMT — the header must state the real instant
+        $response->assertHeader('Sunset', 'Sun, 01 Jun 2025 03:30:00 GMT');
+    }
+
+    #[Test]
+    public function array_form_deprecated_versions_works_without_rfc_mode(): void
+    {
+        $this->overrideConfig([
+            'api-versionist.deprecated_versions' => [
+                'v1' => ['deprecated_at' => '2025-01-01', 'sunset' => '2025-06-01'],
+            ],
+        ]);
+
+        $response = $this->getJson('/api/test', [
+            'X-Api-Version' => 'v1',
+        ]);
+
+        $response->assertOk();
+        $response->assertHeader('Deprecation', 'true');
+        $response->assertHeader('Sunset', '2025-06-01');
+    }
+
+    #[Test]
     public function it_does_not_add_link_header_when_changelog_is_disabled(): void
     {
-        $this->app['config']->set('api-versionist.changelog.enabled', false);
-
-        // Rebuild manager with new config
-        $this->app->forgetInstance(\Versionist\ApiVersionist\Manager\ApiVersionistManager::class);
+        $this->overrideConfig([
+            'api-versionist.changelog.enabled' => false,
+        ]);
 
         $response = $this->getJson('/api/test', [
             'X-Api-Version' => 'v1',
@@ -144,5 +215,21 @@ final class DeprecationHeaderTest extends TestCase
         $response->assertOk();
         $response->assertHeader('Deprecation', 'true');
         $response->assertHeaderMissing('Link');
+    }
+
+    /**
+     * Sets config values, then rebuilds the singletons that snapshot config
+     * at construction (negotiator + manager) so the next request sees them.
+     *
+     * @param  array<string, mixed>  $values
+     */
+    private function overrideConfig(array $values): void
+    {
+        foreach ($values as $key => $value) {
+            $this->app['config']->set($key, $value);
+        }
+
+        $this->app->forgetInstance(\Versionist\ApiVersionist\Version\VersionNegotiator::class);
+        $this->app->forgetInstance(\Versionist\ApiVersionist\Manager\ApiVersionistManager::class);
     }
 }

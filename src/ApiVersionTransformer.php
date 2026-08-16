@@ -4,17 +4,42 @@ declare(strict_types=1);
 
 namespace Versionist\ApiVersionist;
 
+use Versionist\ApiVersionist\Attributes\ApiVersion;
 use Versionist\ApiVersionist\Contracts\VersionTransformerInterface;
 
 /**
  * Base class with no-op defaults for upgradeRequest(), downgradeResponse(), and releasedAt().
- * Subclasses must implement version() and description().
+ *
+ * Subclasses declare their version metadata either by overriding version(),
+ * description(), and releasedAt(), or with the #[ApiVersion] class attribute.
  */
 abstract class ApiVersionTransformer implements VersionTransformerInterface
 {
-    abstract public function version(): string;
+    public function version(): string
+    {
+        $attribute = $this->apiVersionAttribute();
 
-    abstract public function description(): string;
+        if ($attribute === null) {
+            throw new \LogicException(sprintf(
+                '%s must either override version() or declare a #[ApiVersion] attribute.',
+                static::class,
+            ));
+        }
+
+        return $attribute->version;
+    }
+
+    public function description(): string
+    {
+        $attribute = $this->apiVersionAttribute();
+
+        return $attribute !== null ? $attribute->description : '';
+    }
+
+    public function releasedAt(): ?string
+    {
+        return $this->apiVersionAttribute()?->releasedAt;
+    }
 
     /**
      * @param  array<string, mixed>  $data
@@ -34,8 +59,31 @@ abstract class ApiVersionTransformer implements VersionTransformerInterface
         return $data;
     }
 
-    public function releasedAt(): ?string
+    /** @var array<string, ApiVersion|null> */
+    private static array $attributeCache = [];
+
+    /**
+     * Resolves the #[ApiVersion] attribute for this class, walking up the
+     * inheritance chain so subclasses inherit their parent's metadata.
+     * Memoized per class — the attribute is immutable at runtime.
+     */
+    private function apiVersionAttribute(): ?ApiVersion
     {
-        return null;
+        if (array_key_exists(static::class, self::$attributeCache)) {
+            return self::$attributeCache[static::class];
+        }
+
+        $resolved = null;
+
+        for ($class = new \ReflectionClass(static::class); $class !== false; $class = $class->getParentClass()) {
+            $attributes = $class->getAttributes(ApiVersion::class);
+
+            if ($attributes !== []) {
+                $resolved = $attributes[0]->newInstance();
+                break;
+            }
+        }
+
+        return self::$attributeCache[static::class] = $resolved;
     }
 }

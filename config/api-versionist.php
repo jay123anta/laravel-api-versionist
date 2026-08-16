@@ -44,10 +44,13 @@ return [
     | headers in the response to signal clients they should migrate.
     |
     | Set the value to null if no sunset date has been determined yet.
+    | The array form additionally records when the version was deprecated,
+    | which feeds the RFC 9745 Deprecation header (see rfc_compliant_headers).
     |
     | Example:
     |   'v1' => '2025-06-01',
     |   'v2' => null,
+    |   'v3' => ['deprecated_at' => '2025-01-01', 'sunset' => '2025-06-01'],
     |
     */
 
@@ -202,6 +205,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | RFC-Compliant Deprecation Headers
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, deprecation headers use the standards-track wire formats:
+    |
+    |   Sunset:      an HTTP-date per RFC 8594
+    |                (e.g. "Sun, 01 Jun 2025 00:00:00 GMT")
+    |   Deprecation: an @-prefixed unix timestamp per RFC 9745 when a
+    |                deprecated_at date is configured (e.g. "@1735689600"),
+    |                falling back to the legacy boolean "true" otherwise.
+    |
+    | When disabled (default), Sunset is emitted as the raw configured date
+    | string and Deprecation as "true" — the package's historical behavior.
+    |
+    */
+
+    'rfc_compliant_headers' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Strict Mode
     |--------------------------------------------------------------------------
     |
@@ -221,8 +244,11 @@ return [
     | Changelog Settings
     |--------------------------------------------------------------------------
     |
-    | Configuration for the optional changelog endpoint that exposes
-    | registered API versions and their metadata.
+    | Configuration for the optional JSON changelog endpoint that exposes
+    | registered API versions and their metadata. When enabled, a GET route
+    | is registered at the endpoint URI (named "api-versionist.changelog"),
+    | and deprecated responses advertise it via a Link header with
+    | rel="successor-version".
     |
     |   enabled  : Whether to register the changelog route.
     |   endpoint : The URI path for the changelog endpoint.

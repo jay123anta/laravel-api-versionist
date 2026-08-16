@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Versionist\ApiVersionist;
 
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -14,6 +16,7 @@ use Versionist\ApiVersionist\Commands\ListVersionsCommand;
 use Versionist\ApiVersionist\Commands\MakeTransformerCommand;
 use Versionist\ApiVersionist\Contracts\VersionTransformerInterface;
 use Versionist\ApiVersionist\Http\Concerns\HasApiVersion;
+use Versionist\ApiVersionist\Http\Controllers\ChangelogController;
 use Versionist\ApiVersionist\Manager\ApiVersionistManager;
 use Versionist\ApiVersionist\Middleware\ApiVersionMiddleware;
 use Versionist\ApiVersionist\Pipeline\RequestUpgradePipeline;
@@ -49,6 +52,7 @@ class ApiVersionistServiceProvider extends ServiceProvider
         $this->bootMiddleware();
         $this->bootRouteMacro();
         $this->bootRequestMacros();
+        $this->bootChangelogRoute();
     }
 
     private function registerTransformerRegistry(): void
@@ -164,6 +168,37 @@ class ApiVersionistServiceProvider extends ServiceProvider
     private function bootRequestMacros(): void
     {
         HasApiVersion::register();
+    }
+
+    /**
+     * Registers the JSON changelog endpoint advertised by the
+     * Link: rel="successor-version" header. Opt-in via config.
+     */
+    private function bootChangelogRoute(): void
+    {
+        // A cached route file already contains this route; registering it
+        // again would duplicate the api-versionist.changelog name.
+        if ($this->app instanceof CachesRoutes && $this->app->routesAreCached()) {
+            return;
+        }
+
+        $changelog = $this->app->make(ConfigRepository::class)->get('api-versionist.changelog', []);
+
+        if (! is_array($changelog) || empty($changelog['enabled'])) {
+            return;
+        }
+
+        $endpoint = $changelog['endpoint'] ?? null;
+
+        if (! is_string($endpoint) || $endpoint === '') {
+            return;
+        }
+
+        $middleware = $changelog['middleware'] ?? [];
+
+        Route::get($endpoint, ChangelogController::class)
+            ->name('api-versionist.changelog')
+            ->middleware(is_array($middleware) ? $middleware : [$middleware]);
     }
 
     private function configPath(): string

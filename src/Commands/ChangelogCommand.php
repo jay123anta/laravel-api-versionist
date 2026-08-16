@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Versionist\ApiVersionist\Commands;
 
 use Illuminate\Console\Command;
-use Versionist\ApiVersionist\Manager\ApiVersionistManager;
-use Versionist\ApiVersionist\Version\VersionNegotiator;
+use Versionist\ApiVersionist\Support\ChangelogBuilder;
 
 /** Display a changelog of all registered API versions. */
 class ChangelogCommand extends Command
@@ -16,11 +15,24 @@ class ChangelogCommand extends Command
 
     protected $description = 'Display a changelog of all registered API versions';
 
-    public function handle(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
+    public function handle(ChangelogBuilder $builder): int
     {
-        $registry = $manager->getRegistry();
+        $format = $this->option('format');
+        $format = is_string($format) ? strtolower($format) : 'table';
 
-        if ($registry->all() === []) {
+        // JSON is a machine contract: always emit a parseable document,
+        // including the empty one when no transformers are registered.
+        if ($format === 'json') {
+            $output = $builder->build(includeTransformerClass: true);
+
+            $this->line(json_encode($output, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            return self::SUCCESS;
+        }
+
+        $changelog = $builder->build();
+
+        if ($changelog['versions'] === []) {
             $this->warn('No transformers registered.');
             $this->line('');
             $this->line('  Register transformers in <comment>config/api-versionist.php</comment>:');
@@ -33,31 +45,29 @@ class ChangelogCommand extends Command
             return self::SUCCESS;
         }
 
-        $format = $this->option('format');
-        $format = is_string($format) ? strtolower($format) : 'table';
-
         return match ($format) {
-            'json'     => $this->outputJson($manager, $negotiator),
-            'markdown', 'md' => $this->outputMarkdown($manager, $negotiator),
-            default    => $this->outputTable($manager, $negotiator),
+            'markdown', 'md' => $this->outputMarkdown($changelog),
+            default => $this->outputTable($changelog),
         };
     }
 
-    private function outputTable(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
+    /**
+     * @param  array{baseline: string|null, latest: string|null, versions: list<array{version: string, is_latest: bool, is_baseline: bool, transformer_class?: string, description: string, released_at: string|null, deprecated: bool, deprecated_at: string|null, sunset_date: string|null}>}  $changelog
+     */
+    private function outputTable(array $changelog): int
     {
-        $registry = $manager->getRegistry();
-
-        $baseline = $registry->baselineVersion();
-        $latest   = $registry->latestVersion();
-        $versions = $registry->getVersions();
+        $baseline = $changelog['baseline'] ?? '';
+        $versions = $changelog['versions'];
 
         $this->line('');
         $this->line('  <fg=cyan;options=bold>API Version Changelog</>');
         $this->line('  ' . str_repeat('─', 46));
         $this->line('');
 
-        foreach ($versions as $version) {
-            if ($version === $baseline) {
+        foreach ($versions as $entry) {
+            $version = $entry['version'];
+
+            if ($entry['is_baseline']) {
                 $this->line("  <fg=white;options=bold>{$version}</> <fg=gray>(baseline)</>  ");
                 $this->line('  <fg=gray>The original API version before any transforms.</>');
                 $this->line('');
@@ -65,26 +75,21 @@ class ChangelogCommand extends Command
                 continue;
             }
 
-            $transformer = $registry->getTransformer($version);
-
-            $badge = '';
-            if ($version === $latest) {
+            if ($entry['is_latest']) {
                 $badge = '  <fg=green;options=bold>[LATEST]</>';
-            } elseif ($negotiator->isDeprecated($version)) {
-                $sunsetDate = $negotiator->getSunsetDate($version);
-                $sunsetText = $sunsetDate !== null ? " — Sunset: {$sunsetDate}" : '';
-                $badge = "  <fg=red;options=bold>[DEPRECATED{$sunsetText}]</>";
+            } elseif ($entry['deprecated']) {
+                $sunsetText = $entry['sunset_date'] !== null ? " — Sunset: {$entry['sunset_date']}" : '';
+                $badge      = "  <fg=red;options=bold>[DEPRECATED{$sunsetText}]</>";
             } else {
                 $badge = '  <fg=white>[Active]</>';
             }
 
-            $releasedAt = $transformer->releasedAt();
-            $dateBadge  = $releasedAt !== null
-                ? "  <fg=gray>Released: {$releasedAt}</>"
+            $dateBadge = $entry['released_at'] !== null
+                ? "  <fg=gray>Released: {$entry['released_at']}</>"
                 : '';
 
             $this->line("  <fg=white;options=bold>{$version}</>{$badge}{$dateBadge}");
-            $this->line("  <fg=gray>{$transformer->description()}</>");
+            $this->line("  <fg=gray>{$entry['description']}</>");
             $this->line('');
         }
 
@@ -96,63 +101,18 @@ class ChangelogCommand extends Command
         return self::SUCCESS;
     }
 
-    private function outputJson(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
+    /**
+     * @param  array{baseline: string|null, latest: string|null, versions: list<array{version: string, is_latest: bool, is_baseline: bool, transformer_class?: string, description: string, released_at: string|null, deprecated: bool, deprecated_at: string|null, sunset_date: string|null}>}  $changelog
+     */
+    private function outputMarkdown(array $changelog): int
     {
-        $registry = $manager->getRegistry();
-
-        $baseline = $registry->baselineVersion();
-        $latest   = $registry->latestVersion();
-
-        $versionsData = [];
-
-        foreach ($registry->getVersions() as $version) {
-            $entry = [
-                'version'    => $version,
-                'is_latest'  => $version === $latest,
-                'is_baseline' => $version === $baseline,
-            ];
-
-            if ($version !== $baseline) {
-                $transformer = $registry->getTransformer($version);
-                $entry['transformer_class'] = $transformer::class;
-                $entry['description']       = $transformer->description();
-                $entry['released_at']       = $transformer->releasedAt();
-            } else {
-                $entry['description'] = 'Baseline version (no transformer)';
-                $entry['released_at'] = null;
-            }
-
-            $entry['deprecated']  = $negotiator->isDeprecated($version);
-            $entry['sunset_date'] = $negotiator->getSunsetDate($version);
-
-            $versionsData[] = $entry;
-        }
-
-        $output = [
-            'baseline' => $baseline,
-            'latest'   => $latest,
-            'versions' => $versionsData,
-        ];
-
-        $this->line(json_encode($output, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-        return self::SUCCESS;
-    }
-
-    private function outputMarkdown(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
-    {
-        $registry = $manager->getRegistry();
-
-        $baseline = $registry->baselineVersion();
-        $latest   = $registry->latestVersion();
-
         $this->line('# API Changelog');
         $this->line('');
 
-        $versions = array_reverse($registry->getVersions());
+        foreach (array_reverse($changelog['versions']) as $entry) {
+            $version = $entry['version'];
 
-        foreach ($versions as $version) {
-            if ($version === $baseline) {
+            if ($entry['is_baseline']) {
                 $this->line("## {$version} — Baseline");
                 $this->line('');
                 $this->line('The original API version before any transformations were defined.');
@@ -161,19 +121,17 @@ class ChangelogCommand extends Command
                 continue;
             }
 
-            $transformer = $registry->getTransformer($version);
-            $releasedAt  = $transformer->releasedAt() ?? 'Unreleased';
+            $releasedAt = $entry['released_at'] ?? 'Unreleased';
 
             $header = "## {$version} — {$releasedAt}";
 
             $badges = [];
-            if ($version === $latest) {
+            if ($entry['is_latest']) {
                 $badges[] = '`LATEST`';
             }
-            if ($negotiator->isDeprecated($version)) {
-                $sunsetDate = $negotiator->getSunsetDate($version);
-                $badges[] = $sunsetDate !== null
-                    ? "`DEPRECATED — Sunset: {$sunsetDate}`"
+            if ($entry['deprecated']) {
+                $badges[] = $entry['sunset_date'] !== null
+                    ? "`DEPRECATED — Sunset: {$entry['sunset_date']}`"
                     : '`DEPRECATED`';
             }
 
@@ -183,7 +141,7 @@ class ChangelogCommand extends Command
 
             $this->line($header);
             $this->line('');
-            $this->line("- {$transformer->description()}");
+            $this->line("- {$entry['description']}");
             $this->line('');
         }
 

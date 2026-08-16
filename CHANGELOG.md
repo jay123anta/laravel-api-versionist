@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Changelog endpoint** — enabling `changelog.enabled` now registers a real GET route (named `api-versionist.changelog`) serving the version changelog as JSON; previously the config only fed the `Link` header. Internal transformer class names are not exposed over HTTP.
+- **`#[ApiVersion]` attribute** — transformers can declare version, description, and release date via a class attribute instead of overriding `version()`/`description()`/`releasedAt()`. Method overrides still win; `version()` throws a `LogicException` when neither is provided.
+- **RFC-compliant deprecation headers (opt-in)** — new `rfc_compliant_headers` config emits `Sunset` as an RFC 8594 HTTP-date and `Deprecation` as an RFC 9745 `@`-prefixed unix timestamp. `deprecated_versions` entries now also accept an array form `['deprecated_at' => ..., 'sunset' => ...]`; the plain string form keeps working unchanged.
 - **Laravel 13 support** — `illuminate/*` dependencies now allow `^13.0`, `orchestra/testbench` allows `^11.0`, and `phpunit/phpunit` allows `^12.0`. CI matrix extended to PHP 8.5 and Laravel 13.
 - **Quality toolchain** — PHPStan (level 8), Laravel Pint, and Rector configs with a dedicated CI quality job; Dependabot for composer and GitHub Actions; a `--prefer-lowest` CI job verifying the dependency floor; a coverage report job.
 - **Behavioral tests for the `Route::versioned()` macro** covering both the inline route form and the group/registrar form.

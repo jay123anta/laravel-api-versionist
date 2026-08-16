@@ -54,6 +54,7 @@ class AuditCommand extends Command
 
             $this->auditInterface($transformer);
             $this->auditVersion($transformer);
+            $this->auditDescription($transformer);
             $this->auditUpgradeRequest($transformer, $sampleData);
             $this->auditDowngradeResponse($transformer, $sampleData);
         }
@@ -64,6 +65,10 @@ class AuditCommand extends Command
 
         $from = $this->option('from');
         $to   = $this->option('to');
+
+        if (is_string($from) !== is_string($to)) {
+            $this->warn('  Both --from and --to are required for a targeted dry-run; running the default baseline/latest dry-run instead.');
+        }
 
         if (is_string($from) && is_string($to)) {
             $this->dryRunPipeline($manager, $sampleData, $from, $to);
@@ -109,6 +114,17 @@ class AuditCommand extends Command
         }
 
         $this->auditPass("version() returns valid string: \"{$version}\"");
+    }
+
+    private function auditDescription(VersionTransformerInterface $transformer): void
+    {
+        if (trim($transformer->description()) === '') {
+            $this->auditWarn('description() is empty — override it or set #[ApiVersion(description: ...)]');
+
+            return;
+        }
+
+        $this->auditPass('description() provided');
     }
 
     /**

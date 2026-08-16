@@ -34,10 +34,13 @@ class CommandsTest extends TestCase
             ->assertExitCode(0);
     }
 
-    public function test_changelog_json_format_returns_json(): void
+    public function test_changelog_json_format_returns_json_even_with_empty_registry(): void
     {
+        // JSON is a machine contract — no transformers must still yield a
+        // parseable document, not human-readable warning text.
         $this->artisan('api:changelog', ['--format' => 'json'])
-            ->expectsOutputToContain('No transformers registered')
+            ->expectsOutputToContain('"baseline": null')
+            ->doesntExpectOutputToContain('No transformers registered')
             ->assertExitCode(0);
     }
 

@@ -135,4 +135,11 @@ class ServiceProviderTest extends TestCase
         $this->assertNotNull(config('api-versionist.default_version'));
         $this->assertNotNull(config('api-versionist.detection_strategies'));
     }
+
+    public function test_changelog_route_is_not_registered_by_default(): void
+    {
+        $this->assertFalse(Route::has('api-versionist.changelog'));
+
+        $this->get('/api/versions')->assertNotFound();
+    }
 }

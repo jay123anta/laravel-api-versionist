@@ -145,11 +145,12 @@ final class ApiVersionistManager
         if ($this->negotiator->isDeprecated($clientVersion)) {
             $changelog = $this->config['changelog'] ?? [];
 
-            if (! empty($changelog['enabled']) && ! empty($changelog['endpoint'])) {
-                $headers['Link'] = sprintf(
-                    '<%s>; rel="successor-version"',
-                    $changelog['endpoint'],
-                );
+            if (is_array($changelog) && ! empty($changelog['enabled'])) {
+                $endpoint = $changelog['endpoint'] ?? null;
+
+                if (is_string($endpoint) && $endpoint !== '') {
+                    $headers['Link'] = sprintf('<%s>; rel="successor-version"', $endpoint);
+                }
             }
         }
 
@@ -160,12 +161,6 @@ final class ApiVersionistManager
 
     private function latestVersion(): string
     {
-        $configured = $this->config['latest_version'] ?? null;
-
-        if ($configured !== null && VersionParser::isValid($configured)) {
-            return VersionParser::parse($configured);
-        }
-
-        return $this->registry->latestVersion();
+        return $this->negotiator->latestVersion();
     }
 }

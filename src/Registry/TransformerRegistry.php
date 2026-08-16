@@ -27,6 +27,9 @@ final class TransformerRegistry
                 $transformer::class,
                 sprintf('Transformer returned an invalid version string: "%s".', $transformer->version()),
             );
+        } catch (\LogicException $e) {
+            // e.g. a transformer with neither a version() override nor a #[ApiVersion] attribute
+            throw new InvalidTransformerException($transformer::class, $e->getMessage(), 0, $e);
         }
 
         $this->transformers[$version] = $transformer;

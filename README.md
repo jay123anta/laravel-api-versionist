@@ -63,6 +63,15 @@ php artisan vendor:publish --tag=api-versionist-config
 
 Laravel auto-discovers the service provider. No manual registration.
 
+### Supported versions
+
+| Laravel | PHP | Tested against |
+|---|---|---|
+| 13.x | 8.3 – 8.5 | testbench 11, PHPUnit 12 |
+| 12.x | 8.3 – 8.5 | testbench 10, PHPUnit 11 |
+| 11.x | 8.2 – 8.4 | testbench 9, PHPUnit 11 |
+| 10.x | 8.1 – 8.4 | testbench 8, PHPUnit 10 |
+
 ---
 
 ## Quick start
@@ -201,6 +210,23 @@ final class V2Transformer extends ApiVersionTransformer
 
 Fields you don't touch pass through unchanged. A request with `age`, `city`, `custom_field` keeps all of them — transformers only modify what they explicitly reference.
 
+### Attribute-based metadata
+
+Instead of overriding `version()`, `description()`, and `releasedAt()`, you can declare the same metadata with the `#[ApiVersion]` class attribute:
+
+```php
+use Versionist\ApiVersionist\Attributes\ApiVersion;
+
+#[ApiVersion('v2', description: 'Renamed username to handle.', releasedAt: '2025-03-01')]
+final class V2Transformer extends ApiVersionTransformer
+{
+    public function upgradeRequest(array $data): array { /* ... */ }
+    public function downgradeResponse(array $data): array { /* ... */ }
+}
+```
+
+Method overrides always win over the attribute, so existing transformers are unaffected.
+
 ### Constructor injection
 
 Transformers are resolved through Laravel's service container, so DI works:
@@ -295,7 +321,8 @@ No version detected → falls back to `default_version` (usually `'v1'`). Unknow
 | `default_version` | `'v1'` | Fallback when no version detected |
 | `latest_version` | `'v1'` | Must match your highest transformer |
 | `transformers` | `[]` | Array of transformer class names |
-| `deprecated_versions` | `[]` | Version → sunset date map (`'v1' => '2025-12-31'`) |
+| `deprecated_versions` | `[]` | Version → sunset date map (`'v1' => '2025-12-31'` or `'v1' => ['deprecated_at' => ..., 'sunset' => ...]`) |
+| `rfc_compliant_headers` | `false` | Emit `Sunset` as RFC 8594 HTTP-date and `Deprecation` as RFC 9745 timestamp |
 | `strict_mode` | `false` | `true` = unknown versions throw HTTP 400 |
 | `response_data_key` | `'data'` | Key to transform in responses. `null` = entire body |
 | `request_data_key` | `null` | Key to transform in requests. `null` = entire body |
@@ -337,6 +364,53 @@ Mark versions as deprecated in config:
 ```
 
 Headers follow [RFC 8594](https://tools.ietf.org/html/rfc8594). Deprecated versions still work normally.
+
+### Standards-compliant wire formats
+
+By default the package emits the widely-used legacy formats shown above (`Deprecation: true`, `Sunset` as the raw configured date). Enable `rfc_compliant_headers` to switch to the standards-track formats:
+
+```php
+'rfc_compliant_headers' => true,
+
+'deprecated_versions' => [
+    'v1' => ['deprecated_at' => '2025-01-01', 'sunset' => '2025-06-01'],
+],
+```
+
+```
+Deprecation: @1735689600                       ← RFC 9745 (unix timestamp)
+Sunset: Sun, 01 Jun 2025 00:00:00 GMT          ← RFC 8594 (HTTP-date)
+```
+
+The plain string form of `deprecated_versions` keeps working in both modes; without a `deprecated_at` date, `Deprecation` falls back to `true`.
+
+---
+
+## Changelog endpoint
+
+Enable `changelog.enabled` to register a JSON endpoint (route name `api-versionist.changelog`) that serves the same version metadata as `php artisan api:changelog --format=json` — minus internal transformer class names:
+
+```php
+'changelog' => [
+    'enabled'    => true,
+    'endpoint'   => '/api/versions',
+    'middleware' => ['api'],
+],
+```
+
+```json
+{
+    "baseline": "v1",
+    "latest": "v3",
+    "versions": [
+        {"version": "v1", "is_baseline": true, "deprecated": true, "sunset_date": "2025-06-01", ...},
+        {"version": "v2", ...},
+        {"version": "v3", "is_latest": true, ...}
+    ]
+}
+```
+
+This is the endpoint the `Link: rel="successor-version"` deprecation header points clients to.
 
 ---
 
