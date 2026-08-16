@@ -46,6 +46,7 @@ class ListVersionsCommand extends Command
                     '<fg=gray>Baseline</>',
                     '<fg=gray>—</>',
                 ];
+
                 continue;
             }
 
@@ -90,6 +91,9 @@ class ListVersionsCommand extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * @param  list<string>  $versions
+     */
     private function renderChains(ApiVersionistManager $manager, array $versions, string $baseline): void
     {
         $registry = $manager->getRegistry();

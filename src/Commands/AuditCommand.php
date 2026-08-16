@@ -19,7 +19,9 @@ class AuditCommand extends Command
     protected $description = 'Audit registered transformers for correctness and common pitfalls';
 
     private int $passed = 0;
+
     private int $warnings = 0;
+
     private int $errors = 0;
 
     public function handle(ApiVersionistManager $manager): int
@@ -63,7 +65,7 @@ class AuditCommand extends Command
         $from = $this->option('from');
         $to   = $this->option('to');
 
-        if ($from !== null && $to !== null) {
+        if (is_string($from) && is_string($to)) {
             $this->dryRunPipeline($manager, $sampleData, $from, $to);
         } else {
             $baseline = $registry->baselineVersion();
@@ -102,12 +104,16 @@ class AuditCommand extends Command
 
         if (! VersionParser::isValid($version)) {
             $this->auditFail("version() returns invalid string: \"{$version}\"");
+
             return;
         }
 
         $this->auditPass("version() returns valid string: \"{$version}\"");
     }
 
+    /**
+     * @param  array<string, mixed>  $sampleData
+     */
     private function auditUpgradeRequest(VersionTransformerInterface $transformer, array $sampleData): void
     {
         try {
@@ -123,6 +129,9 @@ class AuditCommand extends Command
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $sampleData
+     */
     private function auditDowngradeResponse(VersionTransformerInterface $transformer, array $sampleData): void
     {
         try {
@@ -138,6 +147,9 @@ class AuditCommand extends Command
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $sampleData
+     */
     private function dryRunPipeline(ApiVersionistManager $manager, array $sampleData, string $from, string $to): void
     {
         $registry  = $manager->getRegistry();
@@ -145,6 +157,7 @@ class AuditCommand extends Command
 
         if ($direction === 0) {
             $this->line("    <fg=gray>Skipping {$from} → {$to} (same version)</>");
+
             return;
         }
 

@@ -10,17 +10,13 @@ use Versionist\ApiVersionist\Contracts\VersionTransformerInterface;
 /** Thrown when a class is not a valid version transformer. */
 final class InvalidTransformerException extends InvalidArgumentException
 {
-    public readonly string $transformerClass;
-
     public function __construct(
-        string $transformerClass,
+        public readonly string $transformerClass,
         string $reason = '',
         int $code = 0,
         ?\Throwable $previous = null,
     ) {
-        $this->transformerClass = $transformerClass;
-
-        $message = sprintf('Invalid transformer class "%s".', $transformerClass);
+        $message = sprintf('Invalid transformer class "%s".', $this->transformerClass);
 
         if ($reason !== '') {
             $message .= ' ' . $reason;
@@ -36,7 +32,7 @@ final class InvalidTransformerException extends InvalidArgumentException
 
     public static function forClass(string $class): static
     {
-        return new static(
+        return new self(
             $class,
             sprintf('Class must implement %s.', VersionTransformerInterface::class)
         );

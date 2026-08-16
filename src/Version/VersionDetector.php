@@ -21,13 +21,10 @@ final class VersionDetector implements VersionDetectorInterface
         'query_param'   => 'detectFromQueryParam',
     ];
 
-    /** @var array<string, mixed> */
-    private readonly array $config;
-
-    public function __construct(array $config)
-    {
-        $this->config = $config;
-    }
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    public function __construct(private readonly array $config) {}
 
     public function detect(Request $request): ?string
     {
@@ -89,7 +86,7 @@ final class VersionDetector implements VersionDetectorInterface
 
         $value = $request->header($headerName);
 
-        if ($value === null || trim($value) === '') {
+        if (! is_string($value) || trim($value) === '') {
             return null;
         }
 
@@ -104,9 +101,9 @@ final class VersionDetector implements VersionDetectorInterface
             return null;
         }
 
-        $accept = $request->header('Accept', '');
+        $accept = $request->header('Accept');
 
-        if ($accept === '') {
+        if (! is_string($accept) || $accept === '') {
             return null;
         }
 

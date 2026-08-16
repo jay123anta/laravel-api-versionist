@@ -15,7 +15,7 @@ use Versionist\ApiVersionist\Registry\TransformerRegistry;
  * @method static Request upgradeRequest(Request $request, string $clientVersion)
  * @method static JsonResponse downgradeResponse(JsonResponse $response, string $clientVersion)
  * @method static TransformerRegistry getRegistry()
- * @method static array getConfig()
+ * @method static array<string, mixed> getConfig()
  *
  * @see ApiVersionistManager
  */

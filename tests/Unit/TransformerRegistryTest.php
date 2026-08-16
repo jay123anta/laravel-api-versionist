@@ -16,7 +16,7 @@ final class TransformerRegistryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->registry = new TransformerRegistry();
+        $this->registry = new TransformerRegistry;
     }
 
     // ──────────────────────────────────────────────────────────

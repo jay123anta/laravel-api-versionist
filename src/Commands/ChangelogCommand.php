@@ -19,7 +19,6 @@ class ChangelogCommand extends Command
     public function handle(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
     {
         $registry = $manager->getRegistry();
-        $config   = $manager->getConfig();
 
         if ($registry->all() === []) {
             $this->warn('No transformers registered.');
@@ -34,7 +33,8 @@ class ChangelogCommand extends Command
             return self::SUCCESS;
         }
 
-        $format = strtolower($this->option('format'));
+        $format = $this->option('format');
+        $format = is_string($format) ? strtolower($format) : 'table';
 
         return match ($format) {
             'json'     => $this->outputJson($manager, $negotiator),
@@ -46,7 +46,6 @@ class ChangelogCommand extends Command
     private function outputTable(ApiVersionistManager $manager, VersionNegotiator $negotiator): int
     {
         $registry = $manager->getRegistry();
-        $config   = $manager->getConfig();
 
         $baseline = $registry->baselineVersion();
         $latest   = $registry->latestVersion();
@@ -62,6 +61,7 @@ class ChangelogCommand extends Command
                 $this->line("  <fg=white;options=bold>{$version}</> <fg=gray>(baseline)</>  ");
                 $this->line('  <fg=gray>The original API version before any transforms.</>');
                 $this->line('');
+
                 continue;
             }
 
@@ -134,7 +134,7 @@ class ChangelogCommand extends Command
             'versions' => $versionsData,
         ];
 
-        $this->line(json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $this->line(json_encode($output, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         return self::SUCCESS;
     }
@@ -157,6 +157,7 @@ class ChangelogCommand extends Command
                 $this->line('');
                 $this->line('The original API version before any transformations were defined.');
                 $this->line('');
+
                 continue;
             }
 

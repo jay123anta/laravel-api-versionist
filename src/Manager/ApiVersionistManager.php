@@ -21,6 +21,9 @@ use Versionist\ApiVersionist\Version\VersionNegotiator;
  */
 final class ApiVersionistManager
 {
+    /**
+     * @param  array<string, mixed>  $config
+     */
     public function __construct(
         private readonly VersionNegotiator $negotiator,
         private readonly RequestUpgradePipeline $upgradePipeline,
@@ -28,8 +31,7 @@ final class ApiVersionistManager
         private readonly TransformerRegistry $registry,
         private readonly Dispatcher $events,
         private readonly array $config,
-    ) {
-    }
+    ) {}
 
     public function negotiate(Request $request): string
     {
@@ -65,9 +67,9 @@ final class ApiVersionistManager
         }
 
         $this->events->dispatch(new RequestUpgraded(
-            request:      $request,
-            fromVersion:  $clientVersion,
-            toVersion:    $latestVersion,
+            request: $request,
+            fromVersion: $clientVersion,
+            toVersion: $latestVersion,
             originalData: $originalData,
             upgradedData: $upgradedData,
         ));
@@ -106,10 +108,10 @@ final class ApiVersionistManager
         }
 
         $this->events->dispatch(new ResponseDowngraded(
-            response:       $response,
-            fromVersion:    $latestVersion,
-            toVersion:      $clientVersion,
-            originalData:   $originalData,
+            response: $response,
+            fromVersion: $latestVersion,
+            toVersion: $clientVersion,
+            originalData: $originalData,
             downgradedData: $downgradedData,
         ));
 

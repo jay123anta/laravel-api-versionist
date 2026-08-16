@@ -6,7 +6,6 @@ namespace Versionist\ApiVersionist\Tests\Feature;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use Versionist\ApiVersionist\Tests\TestCase;
 
@@ -37,9 +36,10 @@ final class MultiVersionTransformTest extends TestCase
                     $data['full_name'] = $data['name'];
                     unset($data['name']);
                 }
-                if (!isset($data['age'])) {
+                if (! isset($data['age'])) {
                     $data['age'] = 0;
                 }
+
                 return $data;
             },
             downgrade: function (array $data): array {
@@ -48,6 +48,7 @@ final class MultiVersionTransformTest extends TestCase
                     unset($data['full_name']);
                 }
                 unset($data['age']);
+
                 return $data;
             },
         ));
@@ -59,9 +60,10 @@ final class MultiVersionTransformTest extends TestCase
                     $data['contact'] = ['email' => $data['email']];
                     unset($data['email']);
                 }
-                if (!isset($data['active'])) {
+                if (! isset($data['active'])) {
                     $data['active'] = true;
                 }
+
                 return $data;
             },
             downgrade: function (array $data): array {
@@ -70,17 +72,24 @@ final class MultiVersionTransformTest extends TestCase
                     unset($data['contact']);
                 }
                 unset($data['active']);
+
                 return $data;
             },
         ));
+    }
 
+    /**
+     * @param  \Illuminate\Routing\Router  $router
+     */
+    protected function defineRoutes($router): void
+    {
         // Route that echoes back request input (already upgraded to v3)
-        Route::middleware('api.version')->post('/api/echo', function (Request $request) {
+        $router->middleware('api.version')->post('/api/echo', function (Request $request) {
             return new JsonResponse($request->all());
         });
 
         // Route that returns a v3-schema response
-        Route::middleware('api.version')->get('/api/user', function () {
+        $router->middleware('api.version')->get('/api/user', function () {
             return new JsonResponse([
                 'full_name' => 'Bob',
                 'age' => 25,

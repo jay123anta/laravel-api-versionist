@@ -12,11 +12,10 @@ namespace Versionist\ApiVersionist\Support;
 final class VersionParser
 {
     private const NUMERIC_PATTERN = '/^[vV]?(\d+)(\.\d+)?$/';
+
     private const DATE_PATTERN = '/^\d{4}-\d{2}-\d{2}$/';
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * Normalize a version string. Throws on invalid input.

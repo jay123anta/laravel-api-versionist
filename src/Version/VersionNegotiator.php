@@ -18,16 +18,10 @@ use Versionist\ApiVersionist\Support\VersionParser;
  */
 final class VersionNegotiator
 {
-    /** @var array<string, mixed> */
-    private readonly array $config;
-
-    public function __construct(
-        private readonly VersionDetector $detector,
-        private readonly TransformerRegistry $registry,
-        array $config,
-    ) {
-        $this->config = $config;
-    }
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    public function __construct(private readonly VersionDetector $detector, private readonly TransformerRegistry $registry, private readonly array $config) {}
 
     /**
      * @throws UnknownVersionException in strict mode for unknown versions

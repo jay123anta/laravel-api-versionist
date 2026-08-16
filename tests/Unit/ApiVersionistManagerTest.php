@@ -21,7 +21,7 @@ class ApiVersionistManagerTest extends TestCase
 {
     private function buildManager(array $transformers = [], array $configOverrides = []): ApiVersionistManager
     {
-        $registry = new TransformerRegistry();
+        $registry = new TransformerRegistry;
         if ($transformers !== []) {
             $registry->registerMany($transformers);
         }

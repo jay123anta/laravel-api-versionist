@@ -19,7 +19,7 @@ class VersionNegotiatorTest extends TestCase
     {
         parent::setUp();
 
-        $this->registry = new TransformerRegistry();
+        $this->registry = new TransformerRegistry;
         $this->registry->registerMany([
             $this->makeTransformer('v2'),
             $this->makeTransformer('v3'),

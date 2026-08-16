@@ -55,7 +55,7 @@ final class V3Transformer extends ApiVersionTransformer
      * Upgrade a v2 request payload to v3 schema.
      *
      * @param  array<string, mixed>  $data  The v2 request payload.
-     * @return array<string, mixed>         The v3 request payload.
+     * @return array<string, mixed> The v3 request payload.
      */
     public function upgradeRequest(array $data): array
     {
@@ -91,7 +91,7 @@ final class V3Transformer extends ApiVersionTransformer
      * Downgrade a v3 response payload back to v2 schema.
      *
      * @param  array<string, mixed>  $data  The v3 response payload.
-     * @return array<string, mixed>         The v2 response payload.
+     * @return array<string, mixed> The v2 response payload.
      */
     public function downgradeResponse(array $data): array
     {

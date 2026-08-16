@@ -56,7 +56,7 @@ final class V2Transformer extends ApiVersionTransformer
      * The controller will receive v2-shaped data.
      *
      * @param  array<string, mixed>  $data  The v1 request payload.
-     * @return array<string, mixed>         The v2 request payload.
+     * @return array<string, mixed> The v2 request payload.
      */
     public function upgradeRequest(array $data): array
     {
@@ -92,7 +92,7 @@ final class V2Transformer extends ApiVersionTransformer
      * The client will receive v1-shaped data it understands.
      *
      * @param  array<string, mixed>  $data  The v2 response payload.
-     * @return array<string, mixed>         The v1 response payload.
+     * @return array<string, mixed> The v1 response payload.
      */
     public function downgradeResponse(array $data): array
     {

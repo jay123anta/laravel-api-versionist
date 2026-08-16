@@ -32,24 +32,31 @@ final class VersionDetectionStrategyTest extends TestCase
         $registry->register($this->makeTransformer('v2',
             downgrade: function (array $data): array {
                 $data['schema'] = 'v1';
+
                 return $data;
             },
         ));
+    }
 
+    /**
+     * @param  \Illuminate\Routing\Router  $router
+     */
+    protected function defineRoutes($router): void
+    {
         // Route that reports the detected version
-        Route::middleware('api.version')->get('/api/version-check', function (Request $request) {
+        $router->middleware('api.version')->get('/api/version-check', function (Request $request) {
             return new JsonResponse([
                 'detected' => $request->attributes->get('api_version'),
             ]);
         });
 
         // Versioned URL route
-        Route::middleware('api.version')->get('/api/v1/info', function (Request $request) {
+        $router->middleware('api.version')->get('/api/v1/info', function (Request $request) {
             return new JsonResponse([
                 'detected' => $request->attributes->get('api_version'),
             ]);
         });
-        Route::middleware('api.version')->get('/api/v2/info', function (Request $request) {
+        $router->middleware('api.version')->get('/api/v2/info', function (Request $request) {
             return new JsonResponse([
                 'detected' => $request->attributes->get('api_version'),
             ]);

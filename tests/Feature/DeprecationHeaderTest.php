@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Versionist\ApiVersionist\Tests\Feature;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use Versionist\ApiVersionist\Tests\TestCase;
 
@@ -41,8 +40,14 @@ final class DeprecationHeaderTest extends TestCase
 
         $registry->register($this->makeTransformer('v2'));
         $registry->register($this->makeTransformer('v3'));
+    }
 
-        Route::middleware('api.version')->get('/api/test', function () {
+    /**
+     * @param  \Illuminate\Routing\Router  $router
+     */
+    protected function defineRoutes($router): void
+    {
+        $router->middleware('api.version')->get('/api/test', function () {
             return new JsonResponse(['ok' => true]);
         });
     }

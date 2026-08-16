@@ -8,10 +8,16 @@ interface VersionTransformerInterface
 {
     public function version(): string;
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     public function upgradeRequest(array $data): array;
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     public function downgradeResponse(array $data): array;
 
     public function description(): string;

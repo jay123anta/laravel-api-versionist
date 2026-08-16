@@ -30,7 +30,6 @@ final class MiddlewarePipelineTest extends TestCase
         parent::setUp();
 
         $this->registerTransformers();
-        $this->registerRoutes();
     }
 
     private function registerTransformers(): void
@@ -44,6 +43,7 @@ final class MiddlewarePipelineTest extends TestCase
                     $data['full_name'] = $data['name'];
                     unset($data['name']);
                 }
+
                 return $data;
             },
             downgrade: function (array $data): array {
@@ -51,6 +51,7 @@ final class MiddlewarePipelineTest extends TestCase
                     $data['name'] = $data['full_name'];
                     unset($data['full_name']);
                 }
+
                 return $data;
             },
         ));
@@ -62,6 +63,7 @@ final class MiddlewarePipelineTest extends TestCase
                     $data['contact'] = ['email' => $data['email']];
                     unset($data['email']);
                 }
+
                 return $data;
             },
             downgrade: function (array $data): array {
@@ -69,20 +71,24 @@ final class MiddlewarePipelineTest extends TestCase
                     $data['email'] = $data['contact']['email'];
                     unset($data['contact']);
                 }
+
                 return $data;
             },
         ));
     }
 
-    private function registerRoutes(): void
+    /**
+     * @param  \Illuminate\Routing\Router  $router
+     */
+    protected function defineRoutes($router): void
     {
         // JSON endpoint that echoes back request input
-        Route::middleware('api.version')->post('/api/users', function (Request $request) {
+        $router->middleware('api.version')->post('/api/users', function (Request $request) {
             return new JsonResponse($request->all());
         });
 
         // JSON endpoint that returns controller data (v3 schema)
-        Route::middleware('api.version')->get('/api/users/{id}', function () {
+        $router->middleware('api.version')->get('/api/users/{id}', function () {
             return new JsonResponse([
                 'full_name' => 'Alice',
                 'contact' => ['email' => 'alice@test.com'],
@@ -90,7 +96,7 @@ final class MiddlewarePipelineTest extends TestCase
         });
 
         // Non-JSON endpoint
-        Route::middleware('api.version')->get('/api/download', function () {
+        $router->middleware('api.version')->get('/api/download', function () {
             return response('file-contents', 200, ['Content-Type' => 'text/plain']);
         });
     }

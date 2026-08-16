@@ -10,7 +10,7 @@
 
 Inspired by [Stripe's API versioning architecture](https://stripe.com/blog/api-versioning) — you write small transformer classes that describe what changed between versions. The package upgrades old requests and downgrades new responses automatically. Your controllers always speak the latest version.
 
-Supports Laravel 10, 11 & 12 · PHP 8.1+
+Supports Laravel 10, 11, 12 & 13 · PHP 8.1–8.5
 
 ---
 

@@ -90,6 +90,36 @@ class ServiceProviderTest extends TestCase
         $this->assertTrue(Route::hasMacro('versioned'));
     }
 
+    public function test_route_versioned_macro_registers_route_with_middleware(): void
+    {
+        $route = Route::versioned('get', '/api/macro-test', function () {
+            return response()->json(['ok' => true]);
+        });
+
+        $this->assertContains('GET', $route->methods());
+        $this->assertContains('api.version', $route->gatherMiddleware());
+
+        $response = $this->getJson('/api/macro-test', ['X-Api-Version' => 'v1']);
+
+        $response->assertOk();
+        $response->assertJson(['ok' => true]);
+        $response->assertHeader('X-Api-Version', 'v1');
+    }
+
+    public function test_route_versioned_macro_group_form_applies_middleware(): void
+    {
+        $route = Route::versioned()->get('/api/macro-group', function () {
+            return response()->json(['ok' => true]);
+        });
+
+        $this->assertContains('api.version', $route->gatherMiddleware());
+
+        $response = $this->getJson('/api/macro-group', ['X-Api-Version' => 'v1']);
+
+        $response->assertOk();
+        $response->assertHeader('X-Api-Version', 'v1');
+    }
+
     public function test_request_macros_are_registered(): void
     {
         $request = $this->app->make('request');

@@ -39,6 +39,7 @@ final class EnvelopeTransformTest extends TestCase
                     $data['full_name'] = $data['name'];
                     unset($data['name']);
                 }
+
                 return $data;
             },
             downgrade: function (array $data): array {
@@ -46,12 +47,19 @@ final class EnvelopeTransformTest extends TestCase
                     $data['name'] = $data['full_name'];
                     unset($data['full_name']);
                 }
+
                 return $data;
             },
         ));
+    }
 
+    /**
+     * @param  \Illuminate\Routing\Router  $router
+     */
+    protected function defineRoutes($router): void
+    {
         // Endpoint returning an enveloped response
-        Route::middleware('api.version')->get('/api/users', function () {
+        $router->middleware('api.version')->get('/api/users', function () {
             return new JsonResponse([
                 'data' => [
                     'full_name' => 'Alice',
@@ -68,7 +76,7 @@ final class EnvelopeTransformTest extends TestCase
         });
 
         // Endpoint echoing request input (with envelope)
-        Route::middleware('api.version')->post('/api/users', function (Request $request) {
+        $router->middleware('api.version')->post('/api/users', function (Request $request) {
             return new JsonResponse([
                 'data' => $request->input('data'),
                 'meta' => ['saved' => true],

@@ -35,7 +35,6 @@ abstract class TestCase extends OrchestraTestCase
      * Set up the default package configuration for tests.
      *
      * @param  \Illuminate\Foundation\Application  $app
-     * @return void
      */
     protected function defineEnvironment($app): void
     {
@@ -58,12 +57,11 @@ abstract class TestCase extends OrchestraTestCase
     /**
      * Build an anonymous transformer for use in tests.
      *
-     * @param  string                   $version     The version string (e.g. "v2").
-     * @param  callable|null            $upgrade     Upgrade callback: fn(array $data): array
-     * @param  callable|null            $downgrade   Downgrade callback: fn(array $data): array
-     * @param  string                   $desc        Description for the transformer.
-     * @param  string|null              $releasedAt  Released date string or null.
-     * @return VersionTransformerInterface
+     * @param  string  $version  The version string (e.g. "v2").
+     * @param  callable|null  $upgrade  Upgrade callback: fn(array $data): array
+     * @param  callable|null  $downgrade  Downgrade callback: fn(array $data): array
+     * @param  string  $desc  Description for the transformer.
+     * @param  string|null  $releasedAt  Released date string or null.
      */
     protected function makeTransformer(
         string $version,
@@ -78,15 +76,15 @@ abstract class TestCase extends OrchestraTestCase
         $de = $desc;
         $r = $releasedAt;
 
-        return new class($v, $u, $d, $de, $r) extends ApiVersionTransformer {
+        return new class($v, $u, $d, $de, $r) extends ApiVersionTransformer
+        {
             public function __construct(
                 private readonly string $v,
                 private readonly ?\Closure $u,
                 private readonly ?\Closure $d,
                 private readonly string $de,
                 private readonly ?string $r,
-            ) {
-            }
+            ) {}
 
             public function version(): string
             {

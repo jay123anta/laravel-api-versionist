@@ -9,23 +9,17 @@ use RuntimeException;
 /** Thrown when a request upgrade transformation fails. */
 final class VersionUpgradeException extends RuntimeException
 {
-    public readonly string $fromVersion;
-    public readonly string $toVersion;
-
     public function __construct(
-        string $fromVersion,
-        string $toVersion,
+        public readonly string $fromVersion,
+        public readonly string $toVersion,
         string $reason = '',
         int $code = 0,
         ?\Throwable $previous = null,
     ) {
-        $this->fromVersion = $fromVersion;
-        $this->toVersion = $toVersion;
-
         $message = sprintf(
             'Failed to upgrade request from version "%s" to "%s".',
-            $fromVersion,
-            $toVersion
+            $this->fromVersion,
+            $this->toVersion
         );
 
         if ($reason !== '') {
@@ -37,6 +31,6 @@ final class VersionUpgradeException extends RuntimeException
 
     public static function between(string $from, string $to, string $reason = ''): static
     {
-        return new static($from, $to, $reason);
+        return new self($from, $to, $reason);
     }
 }

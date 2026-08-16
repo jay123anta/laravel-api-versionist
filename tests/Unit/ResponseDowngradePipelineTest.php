@@ -13,12 +13,13 @@ use Versionist\ApiVersionist\Tests\TestCase;
 final class ResponseDowngradePipelineTest extends TestCase
 {
     private TransformerRegistry $registry;
+
     private ResponseDowngradePipeline $pipeline;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->registry = new TransformerRegistry();
+        $this->registry = new TransformerRegistry;
         $this->pipeline = new ResponseDowngradePipeline($this->registry);
     }
 
@@ -30,10 +31,12 @@ final class ResponseDowngradePipelineTest extends TestCase
         $this->registry->registerMany([
             $this->makeTransformer('v2', downgrade: function (array $data) use (&$log): array {
                 $log[] = 'v2';
+
                 return $data;
             }),
             $this->makeTransformer('v3', downgrade: function (array $data) use (&$log): array {
                 $log[] = 'v3';
+
                 return $data;
             }),
         ]);
@@ -51,6 +54,7 @@ final class ResponseDowngradePipelineTest extends TestCase
         $this->registry->register($this->makeTransformer('v3', downgrade: function (array $data): array {
             $data['email'] = $data['contact']['email'];
             unset($data['contact']);
+
             return $data;
         }));
 
@@ -58,6 +62,7 @@ final class ResponseDowngradePipelineTest extends TestCase
         $this->registry->register($this->makeTransformer('v2', downgrade: function (array $data): array {
             $data['name'] = $data['full_name'];
             unset($data['full_name']);
+
             return $data;
         }));
 
@@ -79,6 +84,7 @@ final class ResponseDowngradePipelineTest extends TestCase
     {
         $this->registry->register($this->makeTransformer('v2', downgrade: function (array $data): array {
             $data['should_not_run'] = true;
+
             return $data;
         }));
 
@@ -96,14 +102,17 @@ final class ResponseDowngradePipelineTest extends TestCase
         $this->registry->registerMany([
             $this->makeTransformer('v2', downgrade: function (array $data) use (&$log): array {
                 $log[] = 'v2';
+
                 return $data;
             }),
             $this->makeTransformer('v3', downgrade: function (array $data) use (&$log): array {
                 $log[] = 'v3';
+
                 return $data;
             }),
             $this->makeTransformer('v4', downgrade: function (array $data) use (&$log): array {
                 $log[] = 'v4';
+
                 return $data;
             }),
         ]);
@@ -119,6 +128,7 @@ final class ResponseDowngradePipelineTest extends TestCase
     {
         $this->registry->register($this->makeTransformer('v2', downgrade: function (array $data): array {
             $data['downgraded'] = true;
+
             return $data;
         }));
 

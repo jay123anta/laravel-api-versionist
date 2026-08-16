@@ -9,31 +9,29 @@ use RuntimeException;
 /** Thrown when a requested API version is not recognized. */
 final class UnknownVersionException extends RuntimeException
 {
-    public readonly string $version;
-
-    /** @var array<int, string> */
-    public readonly array $availableVersions;
-
+    /**
+     * @param  array<int, string>  $availableVersions
+     */
     public function __construct(
-        string $version,
-        array $availableVersions = [],
+        public readonly string $version,
+        public readonly array $availableVersions = [],
         int $code = 0,
         ?\Throwable $previous = null,
     ) {
-        $this->version = $version;
-        $this->availableVersions = $availableVersions;
+        $message = sprintf('Unknown API version "%s".', $this->version);
 
-        $message = sprintf('Unknown API version "%s".', $version);
-
-        if ($availableVersions !== []) {
-            $message .= sprintf(' Available versions: %s.', implode(', ', $availableVersions));
+        if ($this->availableVersions !== []) {
+            $message .= sprintf(' Available versions: %s.', implode(', ', $this->availableVersions));
         }
 
         parent::__construct($message, $code, $previous);
     }
 
+    /**
+     * @param  array<int, string>  $availableVersions
+     */
     public static function forVersion(string $version, array $availableVersions = []): static
     {
-        return new static($version, $availableVersions);
+        return new self($version, $availableVersions);
     }
 }

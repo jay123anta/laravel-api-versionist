@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Versionist\ApiVersionist\Tests\Unit;
 
 use InvalidArgumentException;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Versionist\ApiVersionist\Support\VersionParser;

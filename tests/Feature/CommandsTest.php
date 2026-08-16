@@ -63,25 +63,26 @@ class CommandsTest extends TestCase
     {
         $path = base_path('app/Api/Transformers/V4Transformer.php');
 
-        // Clean up before test
         if (file_exists($path)) {
             unlink($path);
         }
 
-        $this->artisan('api:make-transformer', ['version' => 'v4'])
-            ->expectsOutputToContain('Transformer created successfully')
-            ->assertExitCode(0);
+        try {
+            $this->artisan('api:make-transformer', ['version' => 'v4'])
+                ->expectsOutputToContain('Transformer created successfully')
+                ->assertExitCode(0);
 
-        $this->assertFileExists($path);
+            $this->assertFileExists($path);
+        } finally {
+            if (file_exists($path)) {
+                unlink($path);
+            }
 
-        // Clean up
-        unlink($path);
-
-        // Remove empty dirs
-        $dir = dirname($path);
-        while ($dir !== base_path() && is_dir($dir) && count(scandir($dir)) === 2) {
-            rmdir($dir);
-            $dir = dirname($dir);
+            $dir = dirname($path);
+            while ($dir !== base_path() && is_dir($dir) && count(scandir($dir)) === 2) {
+                rmdir($dir);
+                $dir = dirname($dir);
+            }
         }
     }
 }

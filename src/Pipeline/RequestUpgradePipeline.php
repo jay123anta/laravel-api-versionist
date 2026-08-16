@@ -14,10 +14,12 @@ final class RequestUpgradePipeline
 {
     public function __construct(
         private readonly TransformerRegistry $registry,
-    ) {
-    }
+    ) {}
 
-    /** @return array<string, mixed> */
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     public function run(array $data, string $from, string $to): array
     {
         $chain = $this->registry->getUpgradeChain($from, $to);

@@ -16,11 +16,19 @@ abstract class ApiVersionTransformer implements VersionTransformerInterface
 
     abstract public function description(): string;
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     public function upgradeRequest(array $data): array
     {
         return $data;
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     public function downgradeResponse(array $data): array
     {
         return $data;

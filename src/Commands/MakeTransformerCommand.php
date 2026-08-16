@@ -21,6 +21,7 @@ class MakeTransformerCommand extends Command
     public function handle(Filesystem $files): int
     {
         $rawVersion = $this->argument('version');
+        $rawVersion = is_string($rawVersion) ? $rawVersion : '';
 
         if (! VersionParser::isValid($rawVersion)) {
             $this->error("Invalid version string: \"{$rawVersion}\"");
@@ -34,8 +35,10 @@ class MakeTransformerCommand extends Command
         $classVersion = strtoupper(str_replace(['.', '-'], '_', ltrim($version, 'v')));
         $className    = "V{$classVersion}Transformer";
 
-        $relativePath = str_replace('\\', '/', $this->option('path'));
-        $relativePath = rtrim($relativePath, '/');
+        $path = $this->option('path');
+        $path = is_string($path) && $path !== '' ? $path : 'app/Api/Transformers';
+
+        $relativePath = rtrim(str_replace('\\', '/', $path), '/');
 
         $namespace = str_replace('/', '\\', ucfirst($relativePath));
 
@@ -84,12 +87,12 @@ class MakeTransformerCommand extends Command
         $this->line('  Register it in <comment>config/api-versionist.php</comment>:');
         $this->line('');
         $this->line("    <fg=gray>'transformers' => [</>");
-        $this->line("        <fg=gray>// ... existing transformers</>");
+        $this->line('        <fg=gray>// ... existing transformers</>');
 
         $fqcn = $namespace . '\\' . $className;
         $this->line("        <fg=green>{$fqcn}::class,</>");
 
-        $this->line("    <fg=gray>],</>");
+        $this->line('    <fg=gray>],</>');
         $this->line('');
 
         return self::SUCCESS;

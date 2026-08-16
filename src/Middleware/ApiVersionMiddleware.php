@@ -20,8 +20,7 @@ final class ApiVersionMiddleware
 {
     public function __construct(
         private readonly ApiVersionistManager $manager,
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {

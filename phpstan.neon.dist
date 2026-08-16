@@ -1,0 +1,18 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # Laravel macros bind $this at runtime via Macroable::__call, which
+        # plain PHPStan (without Larastan) cannot model. The macro bodies are
+        # covered by behavioral tests instead.
+        -
+            identifier: variable.undefined
+            path: src/Http/Concerns/HasApiVersion.php
+        -
+            identifier: varTag.differentVariable
+            path: src/Http/Concerns/HasApiVersion.php
+        -
+            identifier: method.notFound
+            path: src/ApiVersionistServiceProvider.php

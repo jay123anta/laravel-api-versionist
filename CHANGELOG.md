@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-08-16
+
+### Added
+
+- **Laravel 13 support** — `illuminate/*` dependencies now allow `^13.0`, `orchestra/testbench` allows `^11.0`, and `phpunit/phpunit` allows `^12.0`. CI matrix extended to PHP 8.5 and Laravel 13.
+- **Quality toolchain** — PHPStan (level 8), Laravel Pint, and Rector configs with a dedicated CI quality job; Dependabot for composer and GitHub Actions; a `--prefer-lowest` CI job verifying the dependency floor; a coverage report job.
+- **Behavioral tests for the `Route::versioned()` macro** covering both the inline route form and the group/registrar form.
+
+### Changed
+
+- Declared directly-used dependencies explicitly: `illuminate/console`, `illuminate/filesystem`, and `symfony/http-foundation` (previously only available transitively).
+- Feature tests now register routes through Testbench's `defineRoutes()` hook instead of `setUp()`.
+- Codebase reformatted with Pint (Laravel preset) and modernized with Rector (constructor property promotion).
+- Raised the `phpunit/phpunit` floor to `^10.1` (the `<source>` config element requires 10.1+).
+
+### Fixed
+
+- `api:changelog --format` and `api:make-transformer --path` no longer pass `null` to string functions when the option is given without a value (PHP 8.1+ deprecation, TypeError in PHP 9).
+- `VersionDetector` header and Accept-header strategies now ignore non-string values instead of passing arrays to `trim()`/`preg_match()`.
+- `api:audit --from/--to` options and the `api:make-transformer` version argument are type-guarded before use.
+- `api:changelog --format=json` uses `JSON_THROW_ON_ERROR` instead of silently printing `false` on encoding failure.
+
 ## [1.1.0] - 2026-03-09
 
 ### Added
@@ -71,5 +93,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `request_data_key` config for enveloped request payloads
   - Non-data keys (meta, links, pagination) pass through untouched
 
+[1.2.0]: https://github.com/jay123anta/laravel-api-versionist/releases/tag/v1.2.0
 [1.1.0]: https://github.com/jay123anta/laravel-api-versionist/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jay123anta/laravel-api-versionist/releases/tag/v1.0.0

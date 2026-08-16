@@ -13,12 +13,13 @@ use Versionist\ApiVersionist\Tests\TestCase;
 final class RequestUpgradePipelineTest extends TestCase
 {
     private TransformerRegistry $registry;
+
     private RequestUpgradePipeline $pipeline;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->registry = new TransformerRegistry();
+        $this->registry = new TransformerRegistry;
         $this->pipeline = new RequestUpgradePipeline($this->registry);
     }
 
@@ -28,10 +29,12 @@ final class RequestUpgradePipelineTest extends TestCase
         $this->registry->registerMany([
             $this->makeTransformer('v2', upgrade: function (array $data): array {
                 $data['step_v2'] = true;
+
                 return $data;
             }),
             $this->makeTransformer('v3', upgrade: function (array $data): array {
                 $data['step_v3'] = true;
+
                 return $data;
             }),
         ]);
@@ -52,6 +55,7 @@ final class RequestUpgradePipelineTest extends TestCase
         $this->registry->register($this->makeTransformer('v2', upgrade: function (array $data): array {
             $data['full_name'] = $data['name'];
             unset($data['name']);
+
             return $data;
         }));
 
@@ -59,6 +63,7 @@ final class RequestUpgradePipelineTest extends TestCase
         $this->registry->register($this->makeTransformer('v3', upgrade: function (array $data): array {
             $data['contact'] = ['email' => $data['email']];
             unset($data['email']);
+
             return $data;
         }));
 
@@ -76,6 +81,7 @@ final class RequestUpgradePipelineTest extends TestCase
     {
         $this->registry->register($this->makeTransformer('v2', upgrade: function (array $data): array {
             $data['should_not_run'] = true;
+
             return $data;
         }));
 
@@ -89,9 +95,9 @@ final class RequestUpgradePipelineTest extends TestCase
     public function it_runs_only_relevant_transformers_in_partial_chain(): void
     {
         $this->registry->registerMany([
-            $this->makeTransformer('v2', upgrade: fn(array $d) => array_merge($d, ['v2' => true])),
-            $this->makeTransformer('v3', upgrade: fn(array $d) => array_merge($d, ['v3' => true])),
-            $this->makeTransformer('v4', upgrade: fn(array $d) => array_merge($d, ['v4' => true])),
+            $this->makeTransformer('v2', upgrade: fn (array $d) => array_merge($d, ['v2' => true])),
+            $this->makeTransformer('v3', upgrade: fn (array $d) => array_merge($d, ['v3' => true])),
+            $this->makeTransformer('v4', upgrade: fn (array $d) => array_merge($d, ['v4' => true])),
         ]);
 
         $result = $this->pipeline->run([], 'v2', 'v4');
@@ -106,6 +112,7 @@ final class RequestUpgradePipelineTest extends TestCase
     {
         $this->registry->register($this->makeTransformer('v2', upgrade: function (array $data): array {
             $data['upgraded'] = true;
+
             return $data;
         }));
 

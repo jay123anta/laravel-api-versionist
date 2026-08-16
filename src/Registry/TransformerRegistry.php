@@ -22,7 +22,7 @@ final class TransformerRegistry
     {
         try {
             $version = VersionParser::parse($transformer->version());
-        } catch (\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException) {
             throw new InvalidTransformerException(
                 $transformer::class,
                 sprintf('Transformer returned an invalid version string: "%s".', $transformer->version()),
@@ -35,6 +35,9 @@ final class TransformerRegistry
         return $this;
     }
 
+    /**
+     * @param  iterable<VersionTransformerInterface>  $transformers
+     */
     public function registerMany(iterable $transformers): static
     {
         foreach ($transformers as $transformer) {
@@ -44,7 +47,11 @@ final class TransformerRegistry
         return $this;
     }
 
-    /** Returns transformers where $from < version <= $to, in ascending order. */
+    /**
+     * Returns transformers where $from < version <= $to, in ascending order.
+     *
+     * @return list<VersionTransformerInterface>
+     */
     public function getUpgradeChain(string $from, string $to): array
     {
         $from = VersionParser::parse($from);
@@ -74,7 +81,11 @@ final class TransformerRegistry
         return $chain;
     }
 
-    /** Same as getUpgradeChain but reversed — descending order for downgrade. */
+    /**
+     * Same as getUpgradeChain but reversed — descending order for downgrade.
+     *
+     * @return list<VersionTransformerInterface>
+     */
     public function getDowngradeChain(string $from, string $to): array
     {
         $from = VersionParser::parse($from);
@@ -90,7 +101,7 @@ final class TransformerRegistry
         return array_reverse($this->getUpgradeChain($to, $from));
     }
 
-    /** @return array<int, string> Baseline + all registered versions, ascending. */
+    /** @return list<string> Baseline + all registered versions, ascending. */
     public function getVersions(): array
     {
         if ($this->transformers === []) {

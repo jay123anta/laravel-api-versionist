@@ -8,12 +8,15 @@ use Illuminate\Http\JsonResponse;
 
 final class ResponseDowngraded
 {
+    /**
+     * @param  array<string, mixed>  $originalData
+     * @param  array<string, mixed>  $downgradedData
+     */
     public function __construct(
         public readonly JsonResponse $response,
         public readonly string $fromVersion,
         public readonly string $toVersion,
         public readonly array $originalData,
         public readonly array $downgradedData,
-    ) {
-    }
+    ) {}
 }
