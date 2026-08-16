@@ -5,14 +5,19 @@ parameters:
     treatPhpDocTypesAsCertain: false
     ignoreErrors:
         # Laravel macros bind $this at runtime via Macroable::__call, which
-        # plain PHPStan (without Larastan) cannot model. The macro bodies are
-        # covered by behavioral tests instead.
+        # plain PHPStan cannot model on older framework versions. Newer
+        # Laravel releases annotate the binding, so these errors are not
+        # reported there — hence reportUnmatched: false. The macro bodies
+        # are covered by behavioral tests either way.
         -
             identifier: variable.undefined
             path: src/Http/Concerns/HasApiVersion.php
+            reportUnmatched: false
         -
             identifier: varTag.differentVariable
             path: src/Http/Concerns/HasApiVersion.php
+            reportUnmatched: false
         -
             identifier: method.notFound
             path: src/ApiVersionistServiceProvider.php
+            reportUnmatched: false
