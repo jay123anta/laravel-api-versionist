@@ -38,8 +38,11 @@
             "Versionist\\ApiVersionist\\Tests\\": "tests/"
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
+    "minimum-stability": "stable",
+    "support": {
+        "issues": "https://github.com/jay123anta/laravel-api-versionist/issues",
+        "source": "https://github.com/jay123anta/laravel-api-versionist"
+    },
     "scripts": {
         "test": "vendor/bin/phpunit",
         "test-coverage": "vendor/bin/phpunit --coverage-html coverage",

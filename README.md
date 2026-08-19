@@ -5,6 +5,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
 [![PHP Version](https://img.shields.io/packagist/php-v/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
 [![Tests](https://github.com/jay123anta/laravel-api-versionist/actions/workflows/tests.yml/badge.svg)](https://github.com/jay123anta/laravel-api-versionist/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/jay123anta/laravel-api-versionist/branch/main/graph/badge.svg)](https://codecov.io/gh/jay123anta/laravel-api-versionist)
 [![License](https://img.shields.io/packagist/l/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
 [![Total Downloads](https://img.shields.io/packagist/dt/jayanta/laravel-api-versionist)](https://packagist.org/packages/jayanta/laravel-api-versionist)
 
@@ -563,6 +564,20 @@ Yes. The parser accepts both numeric (`v1`, `v2.1`) and date-based (`2024-01-15`
 ## Prior art
 
 This pattern was [publicly documented by Stripe in 2017](https://stripe.com/blog/api-versioning) (Brandur Leach), adopted by [Intercom in 2018](https://www.intercom.com/blog/api-versioning/), and open-sourced for Ruby by [Keygen](https://github.com/keygen-sh/request_migrations). This package brings the same idea to Laravel.
+
+### How it compares
+
+| | Versionist | [request-migrations](https://github.com/tomschlick/request-migrations) | [api-evolution](https://github.com/ejunker/laravel-api-evolution) | [vermillion](https://github.com/square/vermillion) |
+|---|---|---|---|---|
+| Laravel 10–13 / PHP 8.5 | ✅ | ❌ (dormant, Laravel ≤6 era) | partial | partial |
+| Detection strategies (URL/header/Accept/query) | ✅ 4 | header only | header only | ✅ |
+| RFC 8594 + RFC 9745 deprecation headers | ✅ | ❌ | ❌ | ❌ |
+| JSON changelog endpoint | ✅ | ❌ | ❌ | ❌ |
+| Attribute-based registration | ✅ | ❌ | ❌ | ❌ |
+| Transformer audit CLI (`api:audit`) | ✅ | ❌ | ❌ | ❌ |
+| Date-based versions (Stripe-style) | ✅ | ❌ | ❌ | ✅ |
+
+Coming from `request-migrations`? See the [migration guide](docs/migrating-from-request-migrations.md).
 
 ---
 

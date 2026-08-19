@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Community health files: `CONTRIBUTING.md`, `SECURITY.md`, issue and PR templates.
+- `.gitattributes` with `export-ignore` so the Packagist dist archive ships runtime files only.
+- Codecov upload in CI with a coverage badge.
+- Comparison table vs. alternative packages and a [migration guide from request-migrations](docs/migrating-from-request-migrations.md).
+- Table-driven edge-case tests for `VersionParser` (valid/invalid/comparison datasets).
+
+### Changed
+
+- `minimum-stability` raised from `dev` to `stable`; added Packagist `support` links.
+
 ## [1.2.0] - 2026-08-16
 
 ### Added

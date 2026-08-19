@@ -1,0 +1,33 @@
+name: Bug report
+description: Something is broken
+labels: [bug]
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Environment
+      description: Package / Laravel / PHP versions
+      placeholder: "versionist 1.2.0, Laravel 13.1, PHP 8.4"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Minimal steps, config excerpt, or a failing test case.
+      render: php
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant api-versionist config
+      description: Redact anything sensitive.
+      render: php

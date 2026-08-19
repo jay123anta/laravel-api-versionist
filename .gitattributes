@@ -1,0 +1,13 @@
+# Keep the Packagist dist archive lean — only runtime files ship.
+/.github            export-ignore
+/docs               export-ignore
+/examples           export-ignore
+/tests              export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/phpstan.neon.dist  export-ignore
+/phpunit.xml        export-ignore
+/pint.json          export-ignore
+/rector.php         export-ignore
+
+* text=auto eol=lf
