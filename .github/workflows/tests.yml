@@ -73,6 +73,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # The matrix intentionally installs older framework lines that have
+          # published advisories; don't let Composer block those installs.
+          composer config policy.advisories.block false
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "phpunit/phpunit:${{ matrix.phpunit }}" --no-interaction --no-update
           composer update --prefer-stable --prefer-dist --no-interaction
 
@@ -95,7 +98,9 @@ jobs:
           coverage: none
 
       - name: Install lowest dependencies
-        run: composer update --prefer-lowest --prefer-stable --prefer-dist --no-interaction
+        run: |
+          composer config policy.advisories.block false
+          composer update --prefer-lowest --prefer-stable --prefer-dist --no-interaction
 
       - name: Run tests
         run: vendor/bin/phpunit
@@ -116,7 +121,9 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer update --prefer-stable --prefer-dist --no-interaction
+        run: |
+          composer config policy.advisories.block false
+          composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Pint (code style)
         run: vendor/bin/pint --test
@@ -143,7 +150,9 @@ jobs:
           coverage: xdebug
 
       - name: Install dependencies
-        run: composer update --prefer-stable --prefer-dist --no-interaction
+        run: |
+          composer config policy.advisories.block false
+          composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Run tests with coverage
         run: vendor/bin/phpunit --coverage-clover coverage.xml
